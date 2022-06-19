@@ -37,8 +37,9 @@ func (c *configCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := c.cs.FindAll(c.ctx)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+	} else {
+		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
-	utils.RespondWithJSON(w, http.StatusOK, data)
 }
 
 // FindByName implements ConfigController
@@ -48,8 +49,9 @@ func (c *configCtl) FindByName(w http.ResponseWriter, r *http.Request) {
 	data, err := c.cs.FindByName(c.ctx, name)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+	} else {
+		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
-	utils.RespondWithJSON(w, http.StatusOK, data)
 }
 
 // Save implements ConfigController
@@ -64,8 +66,7 @@ func (c *configCtl) Save(w http.ResponseWriter, r *http.Request) {
 
 	if err := c.cs.Save(c.ctx, cfg); err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
+	} else {
+		utils.RespondWithJSON(w, http.StatusCreated, cfg)
 	}
-
-	utils.RespondWithJSON(w, http.StatusCreated, cfg)
 }

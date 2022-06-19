@@ -33,9 +33,9 @@ func (p *productCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := p.cs.FindAll(p.ctx)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
+	} else {
+		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
-	utils.RespondWithJSON(w, http.StatusOK, data)
 }
 
 // Syns implements ProductController
@@ -49,7 +49,7 @@ func (p *productCtl) Syns(w http.ResponseWriter, r *http.Request) {
 	data, err := p.cs.FindAll(p.ctx)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
+	} else {
+		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
-	utils.RespondWithJSON(w, http.StatusOK, data)
 }
