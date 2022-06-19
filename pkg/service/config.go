@@ -5,6 +5,7 @@ import (
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository/bolt"
 	"go.etcd.io/bbolt"
 )
 
@@ -19,7 +20,7 @@ type configSrv struct {
 }
 
 func NewConfigService(db *bbolt.DB) ConfigService {
-	r := repository.NewWebServiceConfigBolt(db)
+	r := bolt.NewConfigRepoBolt(db)
 
 	return &configSrv{
 		repo: r,

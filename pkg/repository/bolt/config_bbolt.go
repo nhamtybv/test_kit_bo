@@ -1,4 +1,4 @@
-package repository
+package bolt
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository"
 	"go.etcd.io/bbolt"
 )
 
@@ -15,7 +16,7 @@ type configBolt struct {
 	db *bbolt.DB
 }
 
-func NewWebServiceConfigBolt(db *bbolt.DB) ConfigRepository {
+func NewConfigRepoBolt(db *bbolt.DB) repository.ConfigRepository {
 	return &configBolt{db: db}
 }
 

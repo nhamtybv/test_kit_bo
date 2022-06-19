@@ -16,3 +16,6 @@
 
 # vscode
 .vscode
+.config.db
+*.db
+*.config.db

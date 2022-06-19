@@ -27,6 +27,7 @@ func NewRouter(ctx context.Context) *mux.Router {
 	}
 
 	configController := controller.NewConfigController(ctx, bdb)
+	productController := controller.NewProductController(ctx, bdb)
 
 	r.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
@@ -36,6 +37,10 @@ func NewRouter(ctx context.Context) *mux.Router {
 	r.HandleFunc("/api/settings", configController.FindAll).Methods(http.MethodGet, http.MethodOptions)
 	r.HandleFunc("/api/settings", configController.Save).Methods(http.MethodPost, http.MethodOptions)
 	r.HandleFunc("/api/settings/{name}", configController.FindByName).Methods(http.MethodGet, http.MethodOptions)
+
+	//Product
+	r.HandleFunc("/api/products", productController.Syns).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/api/products", productController.FindAll).Methods(http.MethodGet, http.MethodOptions)
 
 	return r
 }
