@@ -1,0 +1,159 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:iss="http://sv.bpc.in/SVAP/iss">
+   <soapenv:Header/>
+   <soapenv:Body>
+        <iss:application xmlns="http://sv.bpc.in/SVAP/iss">
+            <iss:application_type>APTPISSA</iss:application_type>
+            <iss:application_flow_id>1001</iss:application_flow_id>
+            <iss:application_status>APST0006</iss:application_status>
+            <iss:operator_id>ADMIN</iss:operator_id>
+            <iss:institution_id>{{ .InstitutionID }}</iss:institution_id>
+            {{ if .AgentID }}
+            <iss:agent_id>{{ .AgentID}}</iss:agent_id>
+            {{ end }}
+            {{ if .AgentNumber }}
+            <iss:agent_number>{{ .AgentNumber }}</iss:agent_number>
+            {{ end }}
+            <iss:customer_type>ENTTPERS</iss:customer_type>
+            {{ with .Customer }}
+            <iss:customer>
+                <iss:command>CMMDCREX</iss:command>
+                <iss:customer_number>{{ .CustomerNumber }}</iss:customer_number>
+                <iss:customer_category>CCTGORDN</iss:customer_category>
+                <iss:customer_relation>RSCBEXTR</iss:customer_relation>
+                <iss:resident>1</iss:resident>
+                <iss:nationality>704</iss:nationality>
+                <iss:employment_status>CSESEMPL</iss:employment_status>
+                <iss:employment_period>EMPR0001</iss:employment_period>
+                <iss:residence_type>RESTRENT</iss:residence_type>
+                {{ with .Contract }}
+                <iss:contract>
+                    <iss:command>CMMDCREX</iss:command>
+                    <iss:contract_type>{{ .ContractType }}</iss:contract_type>
+                    <iss:product_id>{{ .ProductID }}</iss:product_id>
+                    <iss:start_date>{{ .StartDate }}</iss:start_date>
+                    {{ with .Card }}
+                    <iss:card id="card_1">
+                        <iss:command>CMMDCREX</iss:command>
+                        <iss:card_type>{{ .CardType }}</iss:card_type>
+                        <iss:category>{{ .Category }}</iss:category>
+                        {{ with .Cardholder }}
+                        <iss:cardholder>
+                            <iss:command>CMMDCRPR</iss:command>
+                            {{ if .CardholderNumber }}
+                            <iss:cardholder_number>{{ .CardholderNumber }}</iss:cardholder_number>
+                            {{ end }}
+                            <iss:cardholder_name>{{ .CardholderName }}</iss:cardholder_name>
+                            <iss:sec_word>
+                                <iss:secret_question>SEQUWORD</iss:secret_question>
+                                <iss:secret_answer>{{ .SecWord.SecretAnswer }}</iss:secret_answer>
+                            </iss:sec_word>
+                            <iss:notification>
+                                <iss:command>CMMDCREX</iss:command>
+                                <iss:delivery_channel>3</iss:delivery_channel>
+                                <iss:delivery_address>{{ .Notification.DeliveryAddress }}</iss:delivery_address>
+                                <iss:is_active>1</iss:is_active>
+                            </iss:notification>
+                            <iss:language_preference>
+                                <iss:command>CMMDCRUP</iss:command>
+                                <iss:preferred_lang>LANGENG</iss:preferred_lang>
+                            </iss:language_preference>
+                        </iss:cardholder>
+                        {{ end }}
+                    </iss:card>
+                    {{ end }}
+                    <iss:service value="70000002">
+                        <iss:service_object ref_id="card_1">
+                            <iss:start_date>{{ .StartDate }}</iss:start_date>
+                        </iss:service_object>
+                    </iss:service>
+                    <iss:service value="70000001">
+                        <iss:service_object ref_id="account_1">
+                            <iss:start_date>{{ .StartDate }}</iss:start_date>
+                        </iss:service_object>
+                    </iss:service>
+                    <iss:service value="70000011">
+                        <iss:service_object ref_id="card_1">
+                            <iss:start_date>{{ .StartDate }}</iss:start_date>
+                        </iss:service_object>
+                    </iss:service>            
+                    {{ if eq "ACTP0130" .Account.AccountType }}
+                    <iss:service value="70000003">
+                        <iss:service_object ref_id="account_1">
+                            <iss:start_date>{{ .StartDate }}</iss:start_date>
+                            <iss:attribute_num value="10002774">
+                                <iss:attribute_value_num>1000</iss:attribute_value_num>
+                            </iss:attribute_num>
+                            <iss:attribute_char value="10002773">
+                                <iss:attribute_value_char>CRDP0002</iss:attribute_value_char>
+                            </iss:attribute_char>
+                        </iss:service_object>
+                    </iss:service>
+                    {{ end }}
+                    <iss:account id="account_1">
+                        <iss:command>CMMDCREX</iss:command>
+                        {{ if .Account.Currency }}
+                        <iss:currency>{{ .Account.Currency }}</iss:currency>
+                        {{ else }}
+                        <iss:currency>704</iss:currency>
+                        {{ end }}
+                        <iss:account_type>{{ .Account.AccountType }}</iss:account_type>
+                        <iss:account_object ref_id="card_1">
+                            <iss:account_link_flag>1</iss:account_link_flag>
+                        </iss:account_object>
+                    </iss:account>
+                </iss:contract>
+                {{ end }}
+                {{ with .Person }}
+                <iss:person>
+                    <iss:command>CMMDCRUP</iss:command>
+                    <iss:person_name language="LANGENG">
+                        <iss:surname>{{ .PersonName.Surname }}</iss:surname>
+                        <iss:first_name>{{ .PersonName.FirstName }}</iss:first_name>
+                    </iss:person_name>
+                    <iss:birthday>1984-05-01</iss:birthday>
+                    <iss:identity_card>
+                        <iss:command>CMMDCRUP</iss:command>
+                        <iss:id_type>IDTP0045</iss:id_type>
+                        <iss:id_series>{{ .IdentityCard.IDSeries }}</iss:id_series>
+                        <iss:id_number>{{ .IdentityCard.IDNumber }}</iss:id_number>
+                    </iss:identity_card>
+                </iss:person>
+                {{ end }}
+                {{ with .Contact }}
+                <iss:contact>
+                    <iss:command>CMMDCRUP</iss:command>
+                    <iss:contact_type>CNTTPRMC</iss:contact_type>
+                    <iss:preferred_lang>LANGENG</iss:preferred_lang>
+                    <iss:contact_data>
+                        <iss:commun_method>CMNM0002</iss:commun_method>
+                        <iss:commun_address>{{ .ContactData.CommunAddress }}</iss:commun_address>
+                    </iss:contact_data>
+                </iss:contact>
+                {{ end }}
+                {{ with .Address }}
+                <iss:address>
+                    <iss:command>CMMDCRUP</iss:command>
+                    <iss:address_type>ADTPHOME</iss:address_type>
+                    <iss:country>704</iss:country>
+                    <iss:address_name language="LANGENG">
+                        <iss:region>HCM</iss:region>
+                        <iss:city>HCM</iss:city>
+                        <iss:street>{{ .AddressName.Street }}</iss:street>
+                    </iss:address_name>
+                    <iss:house>{{ .House }}</iss:house>
+                    {{ if .Apartment }}
+                    <iss:apartment>{{ .Apartment }}</iss:apartment>
+                    {{ end }}
+                </iss:address>
+                {{ end }}
+                <iss:notification>
+                    <iss:command>CMMDCREX</iss:command>
+                    <iss:delivery_channel>3</iss:delivery_channel>
+                    <iss:delivery_address>{{ .Notification.DeliveryAddress }}</iss:delivery_address>
+                    <iss:is_active>1</iss:is_active>
+                </iss:notification>
+            </iss:customer>
+            {{ end }}
+        </iss:application>
+   </soapenv:Body>
+</soapenv:Envelope>

@@ -7,10 +7,9 @@ import (
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
+	"github.com/nhamtybv/test_kit_bo/pkg/utils"
 	"go.etcd.io/bbolt"
 )
-
-const TABLE_NAME = "settings"
 
 type configBolt struct {
 	db *bbolt.DB
@@ -26,7 +25,7 @@ func (w *configBolt) Save(ctx context.Context, c *entity.Config) error {
 	}
 
 	err := w.db.Update(func(tx *bbolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(TABLE_NAME))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(utils.SettingTable))
 		if err != nil {
 			return fmt.Errorf("creating setting bucket: %w", err)
 		}
@@ -44,7 +43,7 @@ func (w *configBolt) Save(ctx context.Context, c *entity.Config) error {
 func (w *configBolt) FindByName(ctx context.Context, name string) (*entity.Config, error) {
 	c := &entity.Config{}
 	err := w.db.View(func(tx *bbolt.Tx) error {
-		val := tx.Bucket([]byte(TABLE_NAME)).Get([]byte(name))
+		val := tx.Bucket([]byte(utils.SettingTable)).Get([]byte(name))
 		if val == nil {
 			c.Name = name
 			c.Value = "no_data_found"
@@ -61,7 +60,7 @@ func (w *configBolt) FindAll(ctx context.Context) (*entity.ConfigList, error) {
 	m := make(map[string]string)
 
 	err := w.db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(TABLE_NAME))
+		b := tx.Bucket([]byte(utils.SettingTable))
 
 		b.ForEach(func(k, v []byte) error {
 			tmp := &entity.Config{}

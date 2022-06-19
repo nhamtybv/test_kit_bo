@@ -10,15 +10,16 @@ type Product struct {
 	ProductNumber string               `json:"product_number"`
 	SplitHash     int                  `json:"split_hash"`
 	ProductName   string               `json:"product_name"`
-	Services      []ProductService     `json:"product_services"`
-	AccountTypes  []ProductAccountType `json:"product_account_types"`
-	CardsTypes    []ProductCardType    `json:"card_types"`
-	Children      []Product            `json:"children"`
+	Services      []ProductService     `json:"product_services,omitempty"`
+	AccountTypes  []ProductAccountType `json:"product_account_types,omitempty"`
+	CardsTypes    []ProductCardType    `json:"card_types,omitempty"`
+	Children      []Product            `json:"children,omitempty"`
 }
 
 type ProductService struct {
 	ServiceID   int    `json:"service_id"`
 	ServiceName string `json:"service_name"`
+	EntityType  string `json:"entity_type"`
 }
 
 type ProductAccountType struct {

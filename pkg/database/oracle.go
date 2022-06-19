@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 func NewOracleConnection(strConn string) (*sql.DB, error) {
@@ -17,5 +18,6 @@ func NewOracleConnection(strConn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("ping database fail, error: %w", err)
 	}
 
+	log.Println("Oracle connection is activated")
 	return conn, nil
 }

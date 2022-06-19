@@ -25,8 +25,13 @@ type productSrv struct {
 
 func NewProductService(db *bbolt.DB) ProductService {
 
-	prdOra := oracle.NewProductRepoOrcl()
 	prdBolt := bolt.NewProductRepo(db)
+	connStr, err := prdBolt.GetConnection(context.Background())
+	if err != nil {
+		log.Println("WARNING: Oracle connection wasnot setted up")
+	}
+	log.Printf("Oracle connection: %s", connStr)
+	prdOra := oracle.NewProductRepoOrcl(connStr)
 
 	return &productSrv{
 		oraRepo:  prdOra,
@@ -56,19 +61,21 @@ func (p *productSrv) Syns(ctx context.Context) error {
 		return fmt.Errorf("getting product from database, error: %w", err)
 	}
 
-	prds := make([]entity.Product, data.Count)
+	prds := &entity.ProductList{
+		Count:    0,
+		Products: []entity.Product{},
+	}
+
 	for i := 0; i < data.Count; i++ {
-		if data.Products[i].ParentID != -1 {
+		if data.Products[i].ParentID == -1 {
 			p := data.Products[i]
 			getChildrenProducts(&p, data)
-			prds = append(prds, p)
+			prds.Count += 1
+			prds.Products = append(prds.Products, p)
 		}
 	}
 
-	err = p.boltRepo.Save(ctx, &entity.ProductList{
-		Count:    data.Count,
-		Products: prds,
-	})
+	err = p.boltRepo.Save(ctx, prds)
 
 	if err != nil {
 		return fmt.Errorf("syns products error: %w", err)

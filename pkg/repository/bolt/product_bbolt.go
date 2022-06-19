@@ -7,10 +7,9 @@ import (
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
+	"github.com/nhamtybv/test_kit_bo/pkg/utils"
 	"go.etcd.io/bbolt"
 )
-
-const PRODUCT_TABLE_NAME = "products"
 
 type productRepo struct {
 	db *bbolt.DB
@@ -23,12 +22,15 @@ func NewProductRepo(db *bbolt.DB) repository.ProductRepository {
 // FindAll implements repository.ProductRepository
 func (p *productRepo) FindAll(ctx context.Context) (*entity.ProductList, error) {
 
-	prds := &entity.ProductList{}
+	prds := &entity.ProductList{
+		Count:    0,
+		Products: []entity.Product{},
+	}
 
 	err := p.db.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte(TABLE_NAME))
+		b := tx.Bucket([]byte(utils.ProductTable))
 
-		data := b.Get([]byte(PRODUCT_TABLE_NAME))
+		data := b.Get([]byte(utils.ProductTable))
 		err := json.Unmarshal(data, &prds)
 		if err != nil {
 			return err
@@ -54,7 +56,7 @@ func (p *productRepo) Save(ctx context.Context, c *entity.ProductList) error {
 	}
 
 	err := p.db.Update(func(tx *bbolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(PRODUCT_TABLE_NAME))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(utils.ProductTable))
 		if err != nil {
 			return fmt.Errorf("creating setting bucket: %w", err)
 		}
@@ -64,7 +66,22 @@ func (p *productRepo) Save(ctx context.Context, c *entity.ProductList) error {
 			return fmt.Errorf("json encoding: %w", err)
 		}
 
-		return bucket.Put([]byte(PRODUCT_TABLE_NAME), jo)
+		return bucket.Put([]byte(utils.ProductTable), jo)
 	})
 	return err
+}
+
+// GetConnection implements repository.ProductRepository
+func (p *productRepo) GetConnection(ctx context.Context) (string, error) {
+	c := &entity.Config{}
+	err := p.db.View(func(tx *bbolt.Tx) error {
+		val := tx.Bucket([]byte(utils.SettingTable)).Get([]byte(utils.OracleConnectionKey))
+		if val == nil {
+			c.Name = string(utils.OracleConnectionKey)
+			c.Value = "no_data_found"
+		}
+		return json.Unmarshal(val, &c)
+	})
+
+	return c.Value, err
 }

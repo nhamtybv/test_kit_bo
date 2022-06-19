@@ -33,6 +33,7 @@ func (p *productCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := p.cs.FindAll(p.ctx)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	utils.RespondWithJSON(w, http.StatusOK, data)
 }

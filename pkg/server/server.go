@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type Application interface {
@@ -30,7 +31,7 @@ func NewServer() Application {
 func (a *appServer) Run(addr string) {
 	ctx := context.Background()
 	srv := &http.Server{
-		Handler:      a.router,
+		Handler:      cors.Default().Handler(a.router),
 		Addr:         addr,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
