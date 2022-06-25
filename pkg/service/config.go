@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -38,8 +39,11 @@ func (c *configSrv) FindAll(ctx context.Context) (*entity.ConfigList, error) {
 
 // FindByName implements ConfigService
 func (c *configSrv) FindByName(ctx context.Context, name string) (*entity.Config, error) {
+	log.Printf("SERVICE: find config by: %s", name)
 	data, err := c.repo.FindByName(ctx, name)
+
 	if err != nil {
+		log.Printf("SERVICE: return config %s", err.Error())
 		return nil, err
 	}
 	return data, nil

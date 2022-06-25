@@ -35,3 +35,7 @@ const (
 	SettlementAccountMaintenance string = "Settlement account maintenance"
 	AntiVAUParticipation         string = "Anti-VAU participation"
 )
+
+const (
+	ErrorNoDataFound string = "no_data_found"
+)

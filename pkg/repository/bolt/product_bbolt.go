@@ -73,17 +73,11 @@ func (p *productRepo) Save(ctx context.Context, c *entity.ProductList) error {
 
 // GetConnection implements repository.ProductRepository
 func (p *productRepo) GetConnection(ctx context.Context) (string, error) {
-	c := &entity.Config{}
-	err := p.db.View(func(tx *bbolt.Tx) error {
-		val := tx.Bucket([]byte(utils.SettingTable)).Get([]byte(utils.OracleConnectionKey))
-		if val == nil {
-			c.Name = string(utils.OracleConnectionKey)
-			c.Value = "no_data_found"
-		}
-		return json.Unmarshal(val, &c)
-	})
-
-	return c.Value, err
+	cfg, err := findConfigByName(p.db, string(utils.OracleConnectionKey))
+	if err != nil {
+		return "", err
+	}
+	return cfg.Value, nil
 }
 
 // FindAgent implements repository.ProductRepository

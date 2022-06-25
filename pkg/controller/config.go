@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -36,7 +37,7 @@ func NewConfigController(ctx context.Context, db *bbolt.DB) ConfigController {
 func (c *configCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := c.cs.FindAll(c.ctx)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
@@ -46,9 +47,15 @@ func (c *configCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 func (c *configCtl) FindByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
+	log.Printf("CONTROLLER: find config by: %s", name)
 	data, err := c.cs.FindByName(c.ctx, name)
+
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		if err.Error() == utils.ErrorNoDataFound {
+			utils.RespondWithError(w, http.StatusBadRequest, err)
+			return
+		}
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
@@ -59,13 +66,13 @@ func (c *configCtl) Save(w http.ResponseWriter, r *http.Request) {
 	cfg := new(entity.Config)
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&cfg); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		utils.RespondWithError(w, http.StatusBadRequest, err)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := c.cs.Save(c.ctx, cfg); err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusCreated, cfg)
 	}

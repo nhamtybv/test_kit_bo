@@ -32,19 +32,19 @@ func NewApplicationController(ctx context.Context, db *bbolt.DB) ApplicationCont
 
 // Create implements ApplicationController
 func (a *applicationCtl) Create(w http.ResponseWriter, r *http.Request) {
-	prd := entity.Product{}
+	prd := entity.CardRequest{}
 
 	decoder := json.NewDecoder(r.Body)
 
 	if err := decoder.Decode(&prd); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		utils.RespondWithError(w, http.StatusBadRequest, err)
 		return
 	}
 	defer r.Body.Close()
 
 	err := a.s.Create(a.ctx, &prd)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 		return
 	}
 	utils.RespondWithJSON(w, http.StatusCreated, prd)

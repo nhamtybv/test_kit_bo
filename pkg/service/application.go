@@ -16,7 +16,7 @@ import (
 )
 
 type ApplicationService interface {
-	Create(ctx context.Context, prd *entity.Product) error
+	Create(ctx context.Context, prd *entity.CardRequest) error
 }
 
 type appSrv struct {
@@ -34,13 +34,17 @@ func NewApplicationService(db *bbolt.DB) ApplicationService {
 }
 
 // Save implements ApplicationService
-func (a *appSrv) Create(ctx context.Context, prd *entity.Product) error {
+func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 	app := a.repo.Create(ctx)
 
+	prd := req.Product
 	app.InstitutionID = strconv.Itoa(prd.InstID)
 	app.Customer.Contract.ContractType = prd.ContractType
 	app.Customer.Contract.ProductID = strconv.Itoa(prd.ID)
 	app.Customer.Contract.Card.CardType = strconv.Itoa(prd.CardsTypes[len(prd.CardsTypes)-1].CardTypeID)
+	app.AgentID = strconv.Itoa(req.AgentId)
+	app.Customer.Contract.Card.Category = req.Category
+	app.Customer.Contract.Account.AccountType = prd.AccountTypes[0].AccountType
 
 	log.Printf("Institution ID: [%s], ProductID: [%s], CardType: [%s]", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
 
@@ -56,7 +60,7 @@ func (a *appSrv) Create(ctx context.Context, prd *entity.Product) error {
 		}
 
 		c := entity.Service{
-			Value: string(rune(v.ServiceID)),
+			Value: strconv.Itoa(v.ServiceID),
 			ServiceObject: entity.ServiceObject{
 				RefID:     refId,
 				StartDate: app.Customer.Contract.StartDate,

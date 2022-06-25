@@ -43,5 +43,6 @@ type Agent struct {
 	ParentID    int     `json:"parent_id"`
 	AgentNumber string  `json:"agent_number"`
 	AgentName   string  `json:"agent_name"`
+	AgentLevel  int     `json:"agent_level"`
 	Children    []Agent `json:"children"`
 }

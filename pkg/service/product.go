@@ -31,7 +31,7 @@ func NewProductService(db *bbolt.DB) ProductService {
 	if err != nil {
 		log.Println("WARNING: Oracle connection wasnot setted up")
 	}
-	log.Printf("Oracle connection: %s", connStr)
+	// log.Printf("Oracle connection: %s", connStr)
 	prdOra := oracle.NewProductRepoOrcl(connStr)
 
 	return &productSrv{

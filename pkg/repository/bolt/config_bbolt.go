@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -16,6 +17,11 @@ type configBolt struct {
 }
 
 func NewConfigRepoBolt(db *bbolt.DB) repository.ConfigRepository {
+	_ = db.Update(func(tx *bbolt.Tx) error {
+		tx.CreateBucketIfNotExists([]byte(utils.SettingTable))
+
+		return nil
+	})
 	return &configBolt{db: db}
 }
 
@@ -41,19 +47,7 @@ func (w *configBolt) Save(ctx context.Context, c *entity.Config) error {
 }
 
 func (w *configBolt) FindByName(ctx context.Context, name string) (*entity.Config, error) {
-	c := &entity.Config{}
-	err := w.db.View(func(tx *bbolt.Tx) error {
-		val := tx.Bucket([]byte(utils.SettingTable)).Get([]byte(name))
-		if val == nil {
-			c.Name = name
-			c.Value = "no_data_found"
-
-			w.Save(ctx, c)
-		}
-		return json.Unmarshal(val, &c)
-	})
-
-	return c, err
+	return findConfigByName(w.db, name)
 }
 
 func (w *configBolt) FindAll(ctx context.Context) (*entity.ConfigList, error) {
@@ -84,4 +78,29 @@ func (w *configBolt) FindAll(ctx context.Context) (*entity.ConfigList, error) {
 	}
 
 	return lst, nil
+}
+
+func findConfigByName(db *bbolt.DB, name string) (*entity.Config, error) {
+	c := &entity.Config{}
+
+	log.Printf("REPO: find config by: %s", name)
+
+	err := db.View(func(tx *bbolt.Tx) error {
+		log.Printf("REPO: find config by: %s", name)
+		val := tx.Bucket([]byte(utils.SettingTable)).Get([]byte(name))
+
+		if val == nil {
+			return fmt.Errorf(utils.ErrorNoDataFound)
+		}
+
+		return json.Unmarshal(val, &c)
+	})
+
+	if err != nil {
+		log.Printf("REPO: error when load config [%s]", err.Error())
+		return nil, err
+
+	}
+
+	return c, nil
 }

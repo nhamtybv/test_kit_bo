@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nhamtybv/test_kit_bo/pkg/controller"
 	"github.com/nhamtybv/test_kit_bo/pkg/database"
+	"github.com/nhamtybv/test_kit_bo/static"
 )
 
 type AppRouter struct {
@@ -36,8 +38,8 @@ func NewRouter(ctx context.Context) *mux.Router {
 
 	// Config
 	r.HandleFunc("/api/settings", configController.FindAll).Methods(http.MethodGet, http.MethodOptions)
-	r.HandleFunc("/api/settings", configController.Save).Methods(http.MethodPost, http.MethodOptions)
 	r.HandleFunc("/api/settings/{name}", configController.FindByName).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/api/settings", configController.Save).Methods(http.MethodPost, http.MethodOptions)
 
 	// Product
 	r.HandleFunc("/api/products", productController.Syns).Methods(http.MethodPost, http.MethodOptions)
@@ -48,6 +50,13 @@ func NewRouter(ctx context.Context) *mux.Router {
 
 	// Appluication
 	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost, http.MethodOptions)
+
+	fsys := fs.FS(static.FS)
+	html, _ := fs.Sub(fsys, "ui")
+
+	r.PathPrefix("/").Handler(http.FileServer(http.FS(html)))
+
+	r.Use(LoggerRequest)
 
 	return r
 }

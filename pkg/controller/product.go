@@ -33,7 +33,7 @@ func NewProductController(ctx context.Context, db *bbolt.DB) ProductController {
 func (p *productCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := p.cs.FindAll(p.ctx)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
@@ -44,12 +44,12 @@ func (p *productCtl) Syns(w http.ResponseWriter, r *http.Request) {
 
 	err := p.cs.Syns(p.ctx)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 		return
 	}
 	data, err := p.cs.FindAll(p.ctx)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusOK, data)
 	}
@@ -59,7 +59,7 @@ func (p *productCtl) Syns(w http.ResponseWriter, r *http.Request) {
 func (p *productCtl) FindAllAgents(w http.ResponseWriter, r *http.Request) {
 	data, err := p.cs.FindAllAgents(p.ctx)
 	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusOK, data)
 	}

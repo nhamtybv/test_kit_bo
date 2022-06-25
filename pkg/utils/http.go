@@ -2,11 +2,13 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 )
 
-func RespondWithError(w http.ResponseWriter, code int, message string) {
-	RespondWithJSON(w, code, map[string]string{"error": message})
+func RespondWithError(w http.ResponseWriter, code int, err error) {
+	log.Printf("request error: %v", err)
+	RespondWithJSON(w, code, map[string]string{"error": err.Error()})
 }
 
 func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {

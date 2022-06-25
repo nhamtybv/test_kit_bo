@@ -81,6 +81,7 @@ var (
 		  , 'inst_id' value inst_id
 		  , 'parent_id' value parent_id
 		  , 'agent_name' value agent_name
+		  , 'agent_level' value agent_level
 		) as jso
 	from agent_hierarchical a
 	)
