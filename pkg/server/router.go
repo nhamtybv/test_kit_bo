@@ -31,6 +31,7 @@ func NewRouter(ctx context.Context) *mux.Router {
 	configController := controller.NewConfigController(ctx, bdb)
 	productController := controller.NewProductController(ctx, bdb)
 	applicationController := controller.NewApplicationController(ctx, bdb)
+	cardController := controller.NewCardController(ctx, bdb)
 
 	r.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]bool{"ok": true})
@@ -48,8 +49,11 @@ func NewRouter(ctx context.Context) *mux.Router {
 	// Agents
 	r.HandleFunc("/api/agents", productController.FindAllAgents).Methods(http.MethodGet, http.MethodOptions)
 
-	// Appluication
+	// Application
 	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost, http.MethodOptions)
+
+	// Card
+	r.HandleFunc("/api/cards", cardController.FindAll).Methods(http.MethodGet)
 
 	fsys := fs.FS(static.FS)
 	html, _ := fs.Sub(fsys, "ui")

@@ -7,8 +7,10 @@ const (
 	SettingTable        string   = "SETTINGS"
 	ProductTable        string   = "PRODUCTS"
 	AgentTable          string   = "AGENTS"
+	CardTable           string   = "CARDS_DATA"
 	MainBucket          string   = "CONFIG_BUCKET"
 	DatabaseName        string   = "config.db"
+	WebserviceAddress   string   = "webservice_address"
 )
 
 const (
@@ -41,5 +43,8 @@ const (
 )
 
 const (
-	CREATE_CARD string = "flow_1001"
+	CREATE_CARD         string = "flow_1001"
+	APPLICATION_SERVICE string = "ApplicationService"
+	CARD_NUMBER         string = "card_number"
+	CARD_ID             string = "card_id"
 )

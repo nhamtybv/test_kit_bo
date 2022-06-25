@@ -15,22 +15,19 @@ import (
 )
 
 type WSHandler interface {
-	Call(ctx context.Context, action string, req *bytes.Buffer) (*entity.SoapReponse, error)
+	Call(ctx context.Context, service_url string, req *bytes.Buffer) (*entity.SoapReponse, error)
 }
 
 type wsHandler struct {
-	wsAddr string
 }
 
-func NewWSHandler(address string) WSHandler {
-	return &wsHandler{
-		wsAddr: address,
-	}
+func NewWSHandler() WSHandler {
+	return &wsHandler{}
 }
 
 // Call implements WSHandler
-func (w *wsHandler) Call(ctx context.Context, action string, req *bytes.Buffer) (*entity.SoapReponse, error) {
-	resp, err := http.NewRequest(http.MethodPost, w.wsAddr, req)
+func (w *wsHandler) Call(ctx context.Context, service_url string, req *bytes.Buffer) (*entity.SoapReponse, error) {
+	resp, err := http.NewRequest(http.MethodPost, service_url, req)
 	if err != nil {
 		return nil, fmt.Errorf("preparing request error: %w", err)
 	}
@@ -47,7 +44,6 @@ func (w *wsHandler) Call(ctx context.Context, action string, req *bytes.Buffer) 
 
 	httpClient := &http.Client{
 		Transport: transport,
-		Timeout:   3600,
 	}
 
 	httpResp, err := httpClient.Do(resp)

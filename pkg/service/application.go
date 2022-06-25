@@ -3,14 +3,19 @@ package service
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/fs"
 	"log"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
+	"github.com/nhamtybv/test_kit_bo/pkg/integration"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository/bolt"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository/mock"
+	"github.com/nhamtybv/test_kit_bo/pkg/utils"
 	"github.com/nhamtybv/test_kit_bo/static"
 	"go.etcd.io/bbolt"
 )
@@ -20,16 +25,23 @@ type ApplicationService interface {
 }
 
 type appSrv struct {
-	repo repository.ApplicationConfigRepository
-	fs   fs.FS
+	repo          repository.ApplicationConfigRepository
+	appConfigRepo repository.ApplicationConfigRepository
+	ws            integration.WSHandler
+	fs            fs.FS
 }
 
 func NewApplicationService(db *bbolt.DB) ApplicationService {
-	r := mock.NewApplicationtRepo(db)
+	r := mock.NewApplicationtRepo()
+	rb := bolt.NewApplicationRepoBolt(db)
+
+	ws := integration.NewWSHandler()
 
 	return &appSrv{
-		repo: r,
-		fs:   static.FS,
+		repo:          r,
+		appConfigRepo: rb,
+		ws:            ws,
+		fs:            static.FS,
 	}
 }
 
@@ -46,9 +58,8 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 	app.Customer.Contract.Card.Category = req.Category
 	app.Customer.Contract.Account.AccountType = prd.AccountTypes[0].AccountType
 
-	log.Printf("Institution ID: [%s], ProductID: [%s], CardType: [%s]\n", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
+	log.Printf(" - Institution ID: [%s]\n - ProductID: [%s]\n - CardType: [%s]\n", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
 
-	//app.Customer.Contract.Card.Category = p.Catetory
 	for _, v := range prd.Services {
 		// log.Printf("%v", v)
 		refId := "account_1"
@@ -78,7 +89,38 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 		log.Println("Error parsing template: ", err.Error())
 		return err
 	}
-	log.Printf("Message: \n%s", doc.String())
 
+	log.Printf("Message: \n%s\n", doc.String())
+
+	strAddr, err := a.appConfigRepo.GetAddress(ctx)
+	if err != nil {
+		log.Println("WARNING: webservice url wasnot setted up")
+	}
+
+	strAddr = strings.TrimSuffix(strAddr, "/") + "/" + utils.APPLICATION_SERVICE
+
+	log.Printf("calling webservice at %s", strAddr)
+	resp, err := a.ws.Call(ctx, strAddr, doc)
+	if err != nil {
+		return fmt.Errorf("call webservice error: %w", err)
+	}
+
+	if resp.Body.Fault != nil {
+		return fmt.Errorf("call webservice error: %s", resp.Body.Fault.Faultstring)
+	}
+
+	if resp.Body.Application.ApplicationStatus == "APST0008" {
+		return fmt.Errorf("processing application error: %s", resp.Body.Application.ApplicationID)
+	}
+
+	cardData := map[string]string{}
+	cardData[utils.CARD_NUMBER] = resp.Body.Application.Customer.Contract.Card.CardNumber
+	cardData[utils.CARD_ID] = resp.Body.Application.Customer.Contract.Card.CardID
+	err = a.appConfigRepo.SaveCard(ctx, cardData)
+	if err != nil {
+		log.Print("cannot add new card to database.")
+	}
+
+	log.Printf("application id %s is processed.", resp.Body.Application.ApplicationID)
 	return nil
 }
