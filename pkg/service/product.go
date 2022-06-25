@@ -16,6 +16,7 @@ type ProductService interface {
 	Syns(ctx context.Context) error
 	FindByNumber(ctx context.Context, product_number string) (*entity.Product, error)
 	FindAll(ctx context.Context) (*entity.ProductList, error)
+	FindAllAgents(ctx context.Context) (*entity.Agent, error)
 }
 
 type productSrv struct {
@@ -55,7 +56,7 @@ func (p *productSrv) FindByNumber(ctx context.Context, product_number string) (*
 
 // Syns implements ProductService
 func (p *productSrv) Syns(ctx context.Context) error {
-	log.Println("SERVICE => DEBUG: call syns function")
+	log.Println("SERVICE => DEBUG: call syns products")
 	data, err := p.oraRepo.FindAll(ctx)
 	if err != nil {
 		return fmt.Errorf("getting product from database, error: %w", err)
@@ -76,11 +77,32 @@ func (p *productSrv) Syns(ctx context.Context) error {
 	}
 
 	err = p.boltRepo.Save(ctx, prds)
-
 	if err != nil {
 		return fmt.Errorf("syns products error: %w", err)
 	}
+
+	log.Println("SERVICE => DEBUG: call syns agent")
+
+	agent, err := p.oraRepo.FindAgent(ctx)
+	if err != nil {
+		return fmt.Errorf("getting product from database, error: %w", err)
+	}
+
+	err = p.boltRepo.SaveAgent(ctx, agent)
+	if err != nil {
+		return fmt.Errorf("syns agent error: %w", err)
+	}
+	log.Println("SERVICE => DEBUG: syns finished")
 	return nil
+}
+
+// FindAllAgents implements ProductService
+func (p *productSrv) FindAllAgents(ctx context.Context) (*entity.Agent, error) {
+	data, err := p.boltRepo.FindAgent(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get products, error: %w", err)
+	}
+	return data, nil
 }
 
 func getChildrenProducts(p *entity.Product, ps *entity.ProductList) {

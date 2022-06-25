@@ -36,3 +36,12 @@ type ProductList struct {
 	Count    int       `json:"count"`
 	Products []Product `json:"products"`
 }
+
+type Agent struct {
+	InstID      int     `json:"inst_id"`
+	AgentID     int     `json:"agent_id"`
+	ParentID    int     `json:"parent_id"`
+	AgentNumber string  `json:"agent_number"`
+	AgentName   string  `json:"agent_name"`
+	Children    []Agent `json:"children"`
+}

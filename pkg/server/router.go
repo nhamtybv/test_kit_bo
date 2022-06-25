@@ -43,6 +43,9 @@ func NewRouter(ctx context.Context) *mux.Router {
 	r.HandleFunc("/api/products", productController.Syns).Methods(http.MethodPost, http.MethodOptions)
 	r.HandleFunc("/api/products", productController.FindAll).Methods(http.MethodGet, http.MethodOptions)
 
+	// Agents
+	r.HandleFunc("/api/agents", productController.FindAllAgents).Methods(http.MethodGet, http.MethodOptions)
+
 	// Appluication
 	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost, http.MethodOptions)
 

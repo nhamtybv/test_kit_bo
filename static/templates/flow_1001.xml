@@ -15,7 +15,7 @@
             {{ end }}
             <iss:customer_type>ENTTPERS</iss:customer_type>
             {{ with .Customer }}
-            <iss:customer>
+            <iss:customer id="customer_1">
                 <iss:command>CMMDCREX</iss:command>
                 <iss:customer_number>{{ .CustomerNumber }}</iss:customer_number>
                 <iss:customer_category>CCTGORDN</iss:customer_category>
@@ -42,7 +42,7 @@
                             {{ if .CardholderNumber }}
                             <iss:cardholder_number>{{ .CardholderNumber }}</iss:cardholder_number>
                             {{ end }}
-                            <iss:cardholder_name>{{ .CardholderName }}</iss:cardholder_name>
+                            
                             <iss:sec_word>
                                 <iss:secret_question>SEQUWORD</iss:secret_question>
                                 <iss:secret_answer>{{ .SecWord.SecretAnswer }}</iss:secret_answer>
@@ -53,6 +53,12 @@
                                 <iss:delivery_address>{{ .Notification.DeliveryAddress }}</iss:delivery_address>
                                 <iss:is_active>1</iss:is_active>
                             </iss:notification>
+                            <iss:notification>
+                                <iss:command>CMMDCREX</iss:command>
+                                <iss:delivery_channel>1</iss:delivery_channel>
+                                <iss:delivery_address>{{ .Contact.ContactData.CommunAddress }}</iss:delivery_address>
+                                <iss:is_active>1</iss:is_active>
+                            </iss:notification>
                             <iss:language_preference>
                                 <iss:command>CMMDCRUP</iss:command>
                                 <iss:preferred_lang>LANGENG</iss:preferred_lang>
@@ -61,31 +67,10 @@
                         {{ end }}
                     </iss:card>
                     {{ end }}
-                    <iss:service value="70000002">
-                        <iss:service_object ref_id="card_1">
-                            <iss:start_date>{{ .StartDate }}</iss:start_date>
-                        </iss:service_object>
-                    </iss:service>
-                    <iss:service value="70000001">
-                        <iss:service_object ref_id="account_1">
-                            <iss:start_date>{{ .StartDate }}</iss:start_date>
-                        </iss:service_object>
-                    </iss:service>
-                    <iss:service value="70000011">
-                        <iss:service_object ref_id="card_1">
-                            <iss:start_date>{{ .StartDate }}</iss:start_date>
-                        </iss:service_object>
-                    </iss:service>            
-                    {{ if eq "ACTP0130" .Account.AccountType }}
-                    <iss:service value="70000003">
-                        <iss:service_object ref_id="account_1">
-                            <iss:start_date>{{ .StartDate }}</iss:start_date>
-                            <iss:attribute_num value="10002774">
-                                <iss:attribute_value_num>1000</iss:attribute_value_num>
-                            </iss:attribute_num>
-                            <iss:attribute_char value="10002773">
-                                <iss:attribute_value_char>CRDP0002</iss:attribute_value_char>
-                            </iss:attribute_char>
+                    {{ range .Services }}
+                    <iss:service value="{{.Value}}">
+                        <iss:service_object ref_id="{{.ServiceObject.RefID}}">
+                            <iss:start_date>{{ .ServiceObject.StartDate }}</iss:start_date>
                         </iss:service_object>
                     </iss:service>
                     {{ end }}

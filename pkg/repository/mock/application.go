@@ -25,6 +25,7 @@ func (*applicationRepo) Create(ctx context.Context) *entity.Application {
 	faker.FakeData(&app.Customer)
 	faker.FakeData(&app.Customer.Contract.Card)
 	faker.FakeData(&app.Customer.Contract.Card.Cardholder)
+	faker.FakeData(&app.Customer.Contract.Card.Cardholder.Contact.ContactData)
 	faker.FakeData(&app.Customer.Contract.Card.Cardholder.SecWord)
 
 	faker.FakeData(&app.Customer.Contract.Card.Cardholder.Notification)

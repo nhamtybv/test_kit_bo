@@ -1,12 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"io/fs"
 	"log"
+	"strconv"
+	"text/template"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository/mock"
+	"github.com/nhamtybv/test_kit_bo/static"
 	"go.etcd.io/bbolt"
 )
 
@@ -16,6 +21,7 @@ type ApplicationService interface {
 
 type appSrv struct {
 	repo repository.ApplicationConfigRepository
+	fs   fs.FS
 }
 
 func NewApplicationService(db *bbolt.DB) ApplicationService {
@@ -23,16 +29,21 @@ func NewApplicationService(db *bbolt.DB) ApplicationService {
 
 	return &appSrv{
 		repo: r,
+		fs:   static.FS,
 	}
 }
 
 // Save implements ApplicationService
 func (a *appSrv) Create(ctx context.Context, prd *entity.Product) error {
 	app := a.repo.Create(ctx)
-	app.InstitutionID = string(rune(prd.InstID))
+
+	app.InstitutionID = strconv.Itoa(prd.InstID)
 	app.Customer.Contract.ContractType = prd.ContractType
-	app.Customer.Contract.ProductID = string(rune(prd.ID))
-	app.Customer.Contract.Card.CardType = string(rune(prd.CardsTypes[len(prd.CardsTypes)-1].CardTypeID))
+	app.Customer.Contract.ProductID = strconv.Itoa(prd.ID)
+	app.Customer.Contract.Card.CardType = strconv.Itoa(prd.CardsTypes[len(prd.CardsTypes)-1].CardTypeID)
+
+	log.Printf("Institution ID: [%s], ProductID: [%s], CardType: [%s]", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
+
 	//app.Customer.Contract.Card.Category = p.Catetory
 	for _, v := range prd.Services {
 		log.Printf("%v", v)
@@ -51,8 +62,19 @@ func (a *appSrv) Create(ctx context.Context, prd *entity.Product) error {
 				StartDate: app.Customer.Contract.StartDate,
 			},
 		}
-		app.Customer.Contract.Service = append(app.Customer.Contract.Service, c)
+		app.Customer.Contract.Services = append(app.Customer.Contract.Services, c)
 	}
+
+	// load template
+	appTemplate := template.Must(template.ParseFS(a.fs, "templates/flow_1001.xml"))
+
+	doc := &bytes.Buffer{}
+	err := appTemplate.Execute(doc, app)
+	if err != nil {
+		log.Println("Error parsing template: ", err.Error())
+		return err
+	}
+	log.Printf("Message: \n%s", doc.String())
 
 	return nil
 }

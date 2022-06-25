@@ -16,15 +16,16 @@ type ApplicationController interface {
 }
 
 type applicationCtl struct {
-	cs  service.ProductService
+	s   service.ApplicationService
 	ctx context.Context
 }
 
 func NewApplicationController(ctx context.Context, db *bbolt.DB) ApplicationController {
-	cs := service.NewProductService(db)
+
+	cs := service.NewApplicationService(db)
 
 	return &applicationCtl{
-		cs:  cs,
+		s:   cs,
 		ctx: ctx,
 	}
 }
@@ -41,6 +42,11 @@ func (a *applicationCtl) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	err := a.s.Create(a.ctx, &prd)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	utils.RespondWithJSON(w, http.StatusCreated, prd)
 
 }

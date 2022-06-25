@@ -85,3 +85,46 @@ func (p *productRepo) GetConnection(ctx context.Context) (string, error) {
 
 	return c.Value, err
 }
+
+// FindAgent implements repository.ProductRepository
+func (p *productRepo) FindAgent(ctx context.Context) (*entity.Agent, error) {
+	agent := &entity.Agent{}
+
+	err := p.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(utils.ProductTable))
+
+		data := b.Get([]byte(utils.AgentTable))
+		err := json.Unmarshal(data, &agent)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("get products error: %w", err)
+	}
+	return agent, nil
+}
+
+// SaveAgent implements repository.ProductRepository
+func (p *productRepo) SaveAgent(ctx context.Context, c *entity.Agent) error {
+	if p.db == nil {
+		return fmt.Errorf("config database is not initialed properly")
+	}
+
+	err := p.db.Update(func(tx *bbolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(utils.ProductTable))
+		if err != nil {
+			return fmt.Errorf("creating setting bucket: %w", err)
+		}
+
+		jo, err := json.Marshal(c)
+		if err != nil {
+			return fmt.Errorf("json encoding: %w", err)
+		}
+
+		return bucket.Put([]byte(utils.AgentTable), jo)
+	})
+	return err
+}

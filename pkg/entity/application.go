@@ -44,7 +44,7 @@ type Contract struct {
 	ContractNumber string    `xml:"contract_number" faker:"-" json:"contract_number"`
 	StartDate      string    `xml:"start_date" faker:"-" json:"start_date"`
 	Card           Card      `xml:"card" faker:"-" json:"card"`
-	Service        []Service `xml:"service" faker:"-" json:"service"`
+	Services       []Service `xml:"service" faker:"-" json:"service"`
 	Account        Account   `xml:"account" faker:"-" json:"account"`
 }
 
@@ -67,6 +67,7 @@ type Cardholder struct {
 	CardholderName          string             `xml:"cardholder_name" faker:"name" json:"cardholder_name"`
 	CardholderPhotoFileName string             `xml:"cardholder_photo_file_name" faker:"-" json:"cardholder_photo_file_name"`
 	CardholderSignFileName  string             `xml:"cardholder_sign_file_name" faker:"-" json:"cardholder_sign_file_name"`
+	Contact                 Contact            `xml:"contact" faker:"-" json:"contact"`
 	SecWord                 SecWord            `xml:"sec_word" faker:"-" json:"sec_word"`
 	Notification            Notification       `xml:"notification" faker:"-" json:"notification"`
 	LanguagePreference      LanguagePreference `xml:"language_preference" faker:"-" json:"language_preference"`
