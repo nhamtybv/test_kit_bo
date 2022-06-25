@@ -46,11 +46,11 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 	app.Customer.Contract.Card.Category = req.Category
 	app.Customer.Contract.Account.AccountType = prd.AccountTypes[0].AccountType
 
-	log.Printf("Institution ID: [%s], ProductID: [%s], CardType: [%s]", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
+	log.Printf("Institution ID: [%s], ProductID: [%s], CardType: [%s]\n", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
 
 	//app.Customer.Contract.Card.Category = p.Catetory
 	for _, v := range prd.Services {
-		log.Printf("%v", v)
+		// log.Printf("%v", v)
 		refId := "account_1"
 		if v.EntityType == "ENTTCARD" {
 			refId = "card_1"

@@ -39,3 +39,7 @@ const (
 const (
 	ErrorNoDataFound string = "no_data_found"
 )
+
+const (
+	CREATE_CARD string = "flow_1001"
+)
