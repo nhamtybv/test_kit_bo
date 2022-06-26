@@ -129,6 +129,8 @@
                     {{ if .Apartment }}
                     <iss:apartment>{{ .Apartment }}</iss:apartment>
                     {{ end }}
+                    <iss:postal_code>700000</iss:postal_code>
+                    <iss:region_code>000</iss:region_code>
                 </iss:address>
                 {{ end }}
                 <iss:notification>

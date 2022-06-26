@@ -34,6 +34,8 @@ func (*applicationRepo) Create(ctx context.Context) *entity.Application {
 	faker.FakeData(&app.Customer.Contact.ContactData)
 	faker.FakeData(&app.Customer.Address)
 	faker.FakeData(&app.Customer.Address.AddressName)
+	faker.FakeData(&app.Customer.Address.House)
+	faker.FakeData(&app.Customer.Address.Apartment)
 	faker.FakeData(&app.Customer.Notification)
 
 	start_date := time.Now().Format(time.RFC3339)[:10]

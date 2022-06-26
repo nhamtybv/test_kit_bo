@@ -3,21 +3,21 @@ package entity
 import "encoding/xml"
 
 type SoapRequest struct {
-	App              *Application
-	OperationRequest *OperationRequest `xml:"operationRequest"`
-	Address          string
+	App              *Application      `json:"app"`
+	OperationRequest *OperationRequest `xml:"operationRequest" json:"operation_request"`
+	Address          string            `json:"address"`
 }
 
 type SoapReponse struct {
-	XMLName xml.Name         `xml:"Envelope"`
-	Soap    string           `xml:"soap,attr"`
-	Body    *SoapReponseBody `xml:"Body"`
+	XMLName xml.Name         `xml:"Envelope" json:"xml_name"`
+	Soap    string           `xml:"soap,attr" json:"soap"`
+	Body    *SoapReponseBody `xml:"Body" json:"body"`
 }
 
 type SoapReponseBody struct {
-	Application      *Application      `xml:"application"`
-	OperationRequest *OperationRequest `xml:"operationRequest"`
-	Fault            *Fault            `xml:"Fault"`
+	Application      *Application      `xml:"application" json:"application"`
+	OperationRequest *OperationRequest `xml:"operationRequest" json:"operation_request"`
+	Fault            *Fault            `xml:"Fault" json:"fault"`
 }
 
 // FaultDetail type

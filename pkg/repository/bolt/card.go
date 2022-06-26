@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -37,9 +36,9 @@ func (c *cardRepoBolt) FindAll(ctx context.Context) ([]entity.CachedCard, error)
 			tmp := map[string]string{}
 
 			err := json.Unmarshal(v, &tmp)
-			log.Printf("card: %v", tmp)
+			// log.Printf("card: %v", tmp)
 			if err != nil {
-				log.Printf("card: %v", tmp)
+				// log.Printf("card: %v", tmp)
 				return err
 			}
 
