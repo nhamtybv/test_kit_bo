@@ -2,22 +2,17 @@ package entity
 
 import "encoding/xml"
 
-type SoapRequest struct {
-	App              *Application      `json:"app"`
-	OperationRequest *OperationRequest `xml:"operationRequest" json:"operation_request"`
-	Address          string            `json:"address"`
-}
-
 type SoapReponse struct {
-	XMLName xml.Name         `xml:"Envelope" json:"xml_name"`
-	Soap    string           `xml:"soap,attr" json:"soap"`
-	Body    *SoapReponseBody `xml:"Body" json:"body"`
+	XMLName xml.Name         `xml:"Envelope"`
+	Soap    string           `xml:"soap,attr"`
+	Body    *SoapReponseBody `xml:"Body"`
 }
 
 type SoapReponseBody struct {
-	Application      *Application      `xml:"application" json:"application"`
-	OperationRequest *OperationRequest `xml:"operationRequest" json:"operation_request"`
-	Fault            *Fault            `xml:"Fault" json:"fault"`
+	Application            *Application            `xml:"application"`
+	GetCardInfoResponse    *GetCardInfoResponse    `xml:"getCardInfoResponse"`
+	ProcessIBGDataResponse *ProcessIBGDataResponse `xml:"processIBGDataResponse"`
+	Fault                  *Fault                  `xml:"Fault"`
 }
 
 // FaultDetail type
@@ -27,7 +22,26 @@ type FaultDetail struct {
 
 // Fault type
 type Fault struct {
+	XMLName     xml.Name    `xml:"Fault"`
 	Faultcode   string      `xml:"faultcode" json:"faultcode"`
 	Faultstring string      `xml:"faultstring" json:"faultstring"`
 	Detail      FaultDetail `xml:"detail" json:"detail"`
+}
+
+type SoapHeader struct {
+	XMLName xml.Name `xml:"soap:Header"`
+}
+
+type SoapBody struct {
+	XMLName xml.Name `xml:"soap:Body"`
+	Request interface{}
+}
+
+type SoapEnvelope struct {
+	XMLName xml.Name `xml:"soap:Envelope"`
+	Soap    string   `xml:"xmlns:soap,attr,omitempty"`
+	Ins     string   `xml:"xmlns:ins,attr,omitempty"`
+	Iss     string   `xml:"xmlns:iss,attr,omitempty"`
+	Header  SoapHeader
+	Body    SoapBody
 }

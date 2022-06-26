@@ -113,7 +113,8 @@ type productRepo struct {
 }
 
 func NewProductRepoOrcl(strConn string) repository.ProductRepository {
-	return &productRepo{strConn: "oracle://" + strConn}
+	// return &productRepo{strConn: "oracle://" + strConn}
+	return &productRepo{strConn: "oracle://"}
 }
 
 // FindAll implements repository.ProductRepository
@@ -172,12 +173,18 @@ func (p *productRepo) Save(ctx context.Context, c *entity.ProductList) error {
 }
 
 // GetConnection implements repository.ProductRepository
-func (*productRepo) GetConnection(ctx context.Context) (string, error) {
-	panic("unimplemented")
+func (p *productRepo) GetConnection(ctx context.Context) (string, error) {
+	return p.strConn, nil
+}
+
+// SetConnection implements repository.ProductRepository
+func (p *productRepo) SetConnection(str string) {
+	p.strConn = str
 }
 
 // FindAgent implements repository.ProductRepository
 func (p *productRepo) FindAgent(ctx context.Context) (*entity.Agent, error) {
+
 	tdb, err := database.NewOracleConnection(p.strConn)
 	if err != nil {
 		return nil, fmt.Errorf("prepare oracle connection error: %w", err)

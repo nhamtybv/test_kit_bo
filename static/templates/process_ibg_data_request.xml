@@ -1,0 +1,53 @@
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:ins="http://bpc.ru/sv/instantissueWS/" xmlns:car="http://bpc.ru/sv/SVXP/cardSecure">
+    <soap:Header/>
+    <soap:Body>
+        <ins:processIBGDataRequest>
+            <!--You have a CHOICE of the next 2 items at this level-->
+            <!--You have a CHOICE of the next 3 items at this level-->
+            {{ if .CardID }}
+            <car:card_id>{{ .CardID }}</car:card_id>
+            {{- end }}
+            {{ if .CardUid }}
+            <car:card_uid>{{ .CardUid }}</car:card_uid>
+            {{- end }}
+            {{ if .CardNumber }}
+            <car:card_number>{{ .CardNumber }}</car:card_number>
+            {{- end }}
+            
+            <!--You have a CHOICE of the next 2 items at this level-->
+            {{ if .ExpirationDate }}
+            <car:expiration_date>{{ .ExpirationDate }}</car:expiration_date>
+            {{- end }}
+            {{ if .CardSequentalNumber }}
+            <car:card_sequental_number>{{ .CardSequentalNumber }}</car:card_sequental_number>
+            {{- end }}
+            {{ if .CardInstanceID }}
+            <car:card_instance_id>{{ .CardInstanceID }}</car:card_instance_id>
+            {{- end }}
+            {{ if .State }}
+            <!--Optional:-->
+            <car:state>{{ .State }}</car:state>
+             {{- end }}
+            <car:card_security>
+                <car:PVV>{{ .PVV }}</car:PVV>
+                {{ if .PINOffset }}
+                <car:PIN_offset>{{ .PINOffset }}</car:PIN_offset>
+                {{- end }}
+                {{ if .PINBlock }}
+                <car:PIN_block>{{ .PINBlock }}</car:PIN_block>
+                {{- end }}
+                {{ if .KeyIndex }}
+                <car:key_index>{{ .KeyIndex }}</car:key_index>
+                {{- end }}
+                {{ if .PINBlockFormat }}
+                <car:PIN_block_format>{{ .PINBlockFormat }}</car:PIN_block_format>
+                {{- end }}
+            </car:card_security>
+            <!--Optional:-->
+            {{ if .IssueDate }}
+            <!--Optional:-->
+            <car:issue_date>{{ .IssueDate }}</car:issue_date>
+            {{- end }}
+        </ins:processIBGDataRequest>
+    </soap:Body>
+</soap:Envelope>

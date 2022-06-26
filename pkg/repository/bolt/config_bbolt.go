@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -82,25 +81,15 @@ func (w *configBolt) FindAll(ctx context.Context) (*entity.ConfigList, error) {
 
 func findConfigByName(db *bbolt.DB, name string) (*entity.Config, error) {
 	c := &entity.Config{}
-
-	log.Printf("REPO: find config by: %s", name)
-
 	err := db.View(func(tx *bbolt.Tx) error {
-		log.Printf("REPO: find config by: %s", name)
 		val := tx.Bucket([]byte(utils.SettingTable)).Get([]byte(name))
-
 		if val == nil {
 			return fmt.Errorf(utils.ErrorNoDataFound)
 		}
-
 		return json.Unmarshal(val, &c)
 	})
-
 	if err != nil {
-		log.Printf("REPO: error when load config [%s]", err.Error())
-		return nil, err
-
+		return nil, fmt.Errorf("repo error when load config [%w]", err)
 	}
-
 	return c, nil
 }

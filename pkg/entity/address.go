@@ -21,5 +21,5 @@ type Address struct {
 	RegionCode  string      `xml:"region_code" faker:"-" json:"region_code"`
 	Latitude    string      `xml:"latitude" faker:"-" json:"latitude"`
 	Longitude   string      `xml:"longitude" faker:"-" json:"longitude"`
-	Error       Error       `xml:"error"`
+	Error       Error       `xml:"error" faker:"-" json:"error"`
 }

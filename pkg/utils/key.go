@@ -44,7 +44,13 @@ const (
 
 const (
 	CREATE_CARD         string = "flow_1001"
+	ADD_SUB_CAR         string = "flow_1003"
+	REISSUE_CARD        string = "flow_0005"
 	APPLICATION_SERVICE string = "ApplicationService"
+	INSTANT_ISSUE       string = "InstantIssue"
+	CLEARING_WS         string = "ClearingWS"
 	CARD_NUMBER         string = "card_number"
 	CARD_ID             string = "card_id"
+	APPLICATION_ID      string = "application_id"
+	CHANGE_CARD_STATE   string = "process_ibg_data_request"
 )

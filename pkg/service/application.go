@@ -25,29 +25,32 @@ type ApplicationService interface {
 }
 
 type appSrv struct {
-	repo          repository.ApplicationConfigRepository
-	appConfigRepo repository.ApplicationConfigRepository
-	ws            integration.WSHandler
-	fs            fs.FS
+	app repository.ApplicationConfigRepository
+	cfg repository.ApplicationConfigRepository
+	crd repository.CardRepositoryBolt
+
+	ws integration.WSHandler
+	fs fs.FS
 }
 
 func NewApplicationService(db *bbolt.DB) ApplicationService {
 	r := mock.NewApplicationtRepo()
 	rb := bolt.NewApplicationRepoBolt(db)
-
+	c := bolt.NewCardRepoBolt(db)
 	ws := integration.NewWSHandler()
 
 	return &appSrv{
-		repo:          r,
-		appConfigRepo: rb,
-		ws:            ws,
-		fs:            static.FS,
+		app: r,
+		cfg: rb,
+		crd: c,
+		ws:  ws,
+		fs:  static.FS,
 	}
 }
 
 // Save implements ApplicationService
 func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
-	app := a.repo.Create(ctx)
+	app := a.app.Create(ctx)
 
 	prd := req.Product
 	app.InstitutionID = strconv.Itoa(prd.InstID)
@@ -92,7 +95,7 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 
 	log.Printf("Message: \n%s\n", doc.String())
 
-	strAddr, err := a.appConfigRepo.GetAddress(ctx)
+	strAddr, err := a.cfg.GetAddress(ctx)
 	if err != nil {
 		log.Println("WARNING: webservice url wasnot setted up")
 	}
@@ -110,13 +113,16 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 	}
 
 	if resp.Body.Application.ApplicationStatus == "APST0008" {
-		return fmt.Errorf("processing application error: %s", resp.Body.Application.ApplicationID)
+		return fmt.Errorf("service: processing application error >> %s", resp.Body.Application.ApplicationID)
 	}
 
-	cardData := map[string]string{}
-	cardData[utils.CARD_NUMBER] = resp.Body.Application.Customer.Contract.Card.CardNumber
-	cardData[utils.CARD_ID] = resp.Body.Application.Customer.Contract.Card.CardID
-	err = a.appConfigRepo.SaveCard(ctx, cardData)
+	cardId, _ := strconv.Atoi(resp.Body.Application.Customer.Contract.Card.CardID)
+	err = a.crd.Save(ctx, entity.CachedCard{
+		CardID:        cardId,
+		CardNumber:    resp.Body.Application.Customer.Contract.Card.CardNumber,
+		ApplicationId: resp.Body.Application.ApplicationID,
+	})
+
 	if err != nil {
 		log.Print("cannot add new card to database.")
 	}

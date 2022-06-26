@@ -2,8 +2,10 @@ package bolt
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -32,25 +34,15 @@ func (c *cardRepoBolt) FindAll(ctx context.Context) ([]entity.CachedCard, error)
 		b := tx.Bucket([]byte(utils.CardTable))
 
 		b.ForEach(func(k, v []byte) error {
-
-			tmp := map[string]string{}
-
-			err := json.Unmarshal(v, &tmp)
-			// log.Printf("card: %v", tmp)
+			cc := entity.CachedCard{}
+			err := json.Unmarshal(v, &cc)
 			if err != nil {
-				// log.Printf("card: %v", tmp)
 				return err
 			}
-
-			card_id := tmp[utils.CARD_ID]
-			card_number := tmp[utils.CARD_NUMBER]
-
-			m = append(m, entity.CachedCard{
-				CardID:     card_id,
-				CardNumber: card_number,
-			})
+			m = append(m, cc)
 			return nil
 		})
+
 		return nil
 	})
 
@@ -59,4 +51,28 @@ func (c *cardRepoBolt) FindAll(ctx context.Context) ([]entity.CachedCard, error)
 	}
 
 	return m, nil
+}
+
+// Save implements repository.CardRepositoryBolt
+func (c *cardRepoBolt) Save(ctx context.Context, card entity.CachedCard) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(utils.CardTable))
+		if err != nil {
+			return err
+		}
+
+		jo, err := json.Marshal(card)
+		if err != nil {
+			return err
+		}
+		log.Printf("saving card [%d][%s]\n", card.CardID, card.CardNumber)
+		return bucket.Put(itob(card.CardID), []byte(jo))
+	})
+}
+
+// itob returns an 8-byte big endian representation of v.
+func itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }

@@ -49,11 +49,12 @@ func NewRouter(ctx context.Context) *mux.Router {
 	// Agents
 	r.HandleFunc("/api/agents", productController.FindAllAgents).Methods(http.MethodGet, http.MethodOptions)
 
-	// Application
-	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost, http.MethodOptions)
-
 	// Card
 	r.HandleFunc("/api/cards", cardController.FindAll).Methods(http.MethodGet)
+	r.HandleFunc("/api/applications/{application_id}", cardController.GetCardByApplicationId).Methods(http.MethodGet)
+
+	// Application
+	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost, http.MethodOptions)
 
 	fsys := fs.FS(static.FS)
 	html, _ := fs.Sub(fsys, "ui")

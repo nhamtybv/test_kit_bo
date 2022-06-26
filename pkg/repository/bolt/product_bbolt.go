@@ -80,6 +80,11 @@ func (p *productRepo) GetConnection(ctx context.Context) (string, error) {
 	return cfg.Value, nil
 }
 
+// SetConnection implements repository.ProductRepository
+func (*productRepo) SetConnection(str string) {
+	panic("unimplemented")
+}
+
 // FindAgent implements repository.ProductRepository
 func (p *productRepo) FindAgent(ctx context.Context) (*entity.Agent, error) {
 	agent := &entity.Agent{}

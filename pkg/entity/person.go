@@ -10,8 +10,8 @@ type Person struct {
 	PlaceOfBirth  string        `xml:"place_of_birth" faker:"-" json:"place_of_birth"`
 	Gender        string        `xml:"gender" faker:"-" json:"gender"`
 	IdentityCard  IdentityCard  `xml:"identity_card" faker:"-" json:"identity_card"`
-	FlexibleField FlexibleField `xml:"flexible_field"`
-	Error         Error         `xml:"error"`
+	FlexibleField FlexibleField `xml:"flexible_field" faker:"-" json:"flexible_field"`
+	Error         Error         `xml:"error" faker:"-" json:"error"`
 }
 
 // PersonName type

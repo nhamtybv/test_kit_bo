@@ -9,5 +9,4 @@ import (
 type ApplicationConfigRepository interface {
 	Create(ctx context.Context) *entity.Application
 	GetAddress(ctx context.Context) (string, error)
-	SaveCard(ctx context.Context, cardInfo map[string]string) error
 }

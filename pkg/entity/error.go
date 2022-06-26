@@ -1,9 +1,9 @@
 package entity
 
 type Error struct {
-	ID           string `xml:"id,attr" json:"id"`
-	ErrorCode    string `xml:"error_code" json:"error_code"`
-	ErrorDesc    string `xml:"error_desc" json:"error_desc"`
-	ErrorElement string `xml:"error_element" json:"error_element"`
-	ErrorDetails string `xml:"error_details" json:"error_details"`
+	ID           string `xml:"id,attr,omitempty" json:"id,omitempty"`
+	ErrorCode    string `xml:"error_code,omitempty" json:"error_code,omitempty"`
+	ErrorDesc    string `xml:"error_desc,omitempty" json:"error_desc,omitempty"`
+	ErrorElement string `xml:"error_element,omitempty" json:"error_element,omitempty"`
+	ErrorDetails string `xml:"error_details,omitempty" json:"error_details,omitempty"`
 }

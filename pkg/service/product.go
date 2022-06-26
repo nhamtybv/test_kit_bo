@@ -22,11 +22,13 @@ type ProductService interface {
 type productSrv struct {
 	oraRepo  repository.ProductRepository
 	boltRepo repository.ProductRepository
+	cfgRepo  repository.ConfigRepository
 }
 
 func NewProductService(db *bbolt.DB) ProductService {
 
 	prdBolt := bolt.NewProductRepo(db)
+	configRepo := bolt.NewConfigRepoBolt(db)
 	connStr, err := prdBolt.GetConnection(context.Background())
 	if err != nil {
 		log.Println("WARNING: Oracle connection wasnot setted up")
@@ -37,6 +39,7 @@ func NewProductService(db *bbolt.DB) ProductService {
 	return &productSrv{
 		oraRepo:  prdOra,
 		boltRepo: prdBolt,
+		cfgRepo:  configRepo,
 	}
 }
 
@@ -57,6 +60,12 @@ func (p *productSrv) FindByNumber(ctx context.Context, product_number string) (*
 // Syns implements ProductService
 func (p *productSrv) Syns(ctx context.Context) error {
 	log.Println("SERVICE => DEBUG: call syns products")
+	strConn, _ := p.oraRepo.GetConnection(ctx)
+	if strConn == "oracle://" {
+		strConn, _ = p.boltRepo.GetConnection(ctx)
+		p.oraRepo.SetConnection("oracle://" + strConn)
+	}
+
 	data, err := p.oraRepo.FindAll(ctx)
 	if err != nil {
 		return fmt.Errorf("getting product from database, error: %w", err)
