@@ -9,9 +9,17 @@ type CardRequest struct {
 }
 
 type CachedCard struct {
-	CardID        int    `json:"card_id"`
+	CardID        int64  `json:"card_id"`
 	CardNumber    string `json:"card_number"`
 	ApplicationId string `json:"application_id"`
+	CardState     string `json:"card_state"`
+	CardStatus    string `json:"card_status"`
+}
+
+type MakeOperationRequest struct {
+	OperationType string      `json:"operation_type"`
+	Card          *CachedCard `json:"card"`
+	Amount        string      `json:"amount"`
 }
 
 // Card type

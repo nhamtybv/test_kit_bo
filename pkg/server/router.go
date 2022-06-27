@@ -38,23 +38,26 @@ func NewRouter(ctx context.Context) *mux.Router {
 	})
 
 	// Config
-	r.HandleFunc("/api/settings", configController.FindAll).Methods(http.MethodGet, http.MethodOptions)
-	r.HandleFunc("/api/settings/{name}", configController.FindByName).Methods(http.MethodGet, http.MethodOptions)
-	r.HandleFunc("/api/settings", configController.Save).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/api/settings", configController.FindAll).Methods(http.MethodGet)
+	r.HandleFunc("/api/settings/{name}", configController.FindByName).Methods(http.MethodGet)
+	r.HandleFunc("/api/settings", configController.Save).Methods(http.MethodPost)
 
 	// Product
-	r.HandleFunc("/api/products", productController.Syns).Methods(http.MethodPost, http.MethodOptions)
-	r.HandleFunc("/api/products", productController.FindAll).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/api/products", productController.Syns).Methods(http.MethodPost)
+	r.HandleFunc("/api/products", productController.FindAll).Methods(http.MethodGet)
 
 	// Agents
-	r.HandleFunc("/api/agents", productController.FindAllAgents).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/api/agents", productController.FindAllAgents).Methods(http.MethodGet)
 
 	// Card
 	r.HandleFunc("/api/cards", cardController.FindAll).Methods(http.MethodGet)
-	r.HandleFunc("/api/applications/{application_id}", cardController.GetCardByApplicationId).Methods(http.MethodGet)
+	r.HandleFunc("/api/cards", cardController.Activate).Methods(http.MethodPost)
+
+	// Operation
+	r.HandleFunc("/api/operation", cardController.MakeOperation).Methods(http.MethodPost)
 
 	// Application
-	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/api/applications", applicationController.Create).Methods(http.MethodPost)
 
 	fsys := fs.FS(static.FS)
 	html, _ := fs.Sub(fsys, "ui")

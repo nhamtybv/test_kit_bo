@@ -54,3 +54,13 @@ const (
 	APPLICATION_ID      string = "application_id"
 	CHANGE_CARD_STATE   string = "process_ibg_data_request"
 )
+
+const (
+	CHANGE_CARD_STATUS string = "OPTP0171"
+	PURCHASE           string = "OPTP0000"
+	CASH_WDR           string = "OPTP0001"
+	PAYMENT            string = "OPTP0422"
+	CARD_ISSUED        string = "CSTE0100"
+	CARD_ACTIVATED     string = "CSTE0200"
+	DEFAULT_PVV        string = "000"
+)

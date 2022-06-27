@@ -19,7 +19,8 @@ import (
 
 type CardService interface {
 	FindAll(ctx context.Context) ([]entity.CachedCard, error)
-	GetCardByApplicationId(ctx context.Context, appId string) (*entity.CardInfo, error)
+	Activate(ctx context.Context, card entity.CachedCard) error
+	MakeTransaction(ctx context.Context, opr entity.MakeOperationRequest) error
 }
 
 type cardSrv struct {
@@ -50,8 +51,7 @@ func (c *cardSrv) FindAll(ctx context.Context) ([]entity.CachedCard, error) {
 }
 
 // GetCardByApplicationId implements CardService
-func (c *cardSrv) GetCardByApplicationId(ctx context.Context, appId string) (*entity.CardInfo, error) {
-	log.Println(">> get card information")
+func (c *cardSrv) Activate(ctx context.Context, card entity.CachedCard) error {
 
 	var req = entity.SoapEnvelope{
 		Soap:   "http://www.w3.org/2003/05/soap-envelope",
@@ -59,7 +59,7 @@ func (c *cardSrv) GetCardByApplicationId(ctx context.Context, appId string) (*en
 		Header: entity.SoapHeader{},
 		Body: entity.SoapBody{
 			Request: entity.GetCardInfoRequest{
-				ApplId:        appId,
+				ApplId:        card.ApplicationId,
 				IncludeLimits: "0",
 				Lang:          "LANGENG",
 			},
@@ -68,7 +68,7 @@ func (c *cardSrv) GetCardByApplicationId(ctx context.Context, appId string) (*en
 
 	resp, err := c.callSoap(ctx, utils.INSTANT_ISSUE, req)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf(">> serivce: getting card information error >> %w", err)
 	}
 
 	info := resp.Body.GetCardInfoResponse.CardInfo
@@ -95,11 +95,11 @@ func (c *cardSrv) GetCardByApplicationId(ctx context.Context, appId string) (*en
 
 		resp, err = c.callSoap(ctx, utils.INSTANT_ISSUE, req)
 		if err != nil {
-			return nil, err
+			return fmt.Errorf(">> serivce: changing card state error >> %w", err)
 		}
 
 		stateResult := resp.Body.ProcessIBGDataResponse.Text
-		log.Printf(">> changed card state to [CSTE0200]operation status [%s]", stateResult)
+		log.Printf(">> changed card state to [CSTE0200] operation status [%s]", stateResult)
 	}
 
 	log.Printf(">> change card status from [%s]", info.CardStatus)
@@ -111,7 +111,7 @@ func (c *cardSrv) GetCardByApplicationId(ctx context.Context, appId string) (*en
 		Body: entity.SoapBody{
 			Request: entity.OperationRequest{
 				Operation: entity.Operation{
-					OperType: "OPTP0171",
+					OperType: utils.CHANGE_CARD_STATUS,
 					MsgType:  "MSGTPRES",
 					SttlType: "STTT0000",
 					OperDate: time.Now().Format(time.RFC3339)[:19],
@@ -132,14 +132,19 @@ func (c *cardSrv) GetCardByApplicationId(ctx context.Context, appId string) (*en
 		},
 	}
 
-	resp, err = c.callSoap(ctx, utils.CLEARING_WS, req)
+	_, err = c.callSoap(ctx, utils.CLEARING_WS, req)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf(">> serivce: activating card error >> %w", err)
 	}
-	log.Printf("%v", resp)
 
-	return &info, nil
+	log.Printf("Card number [%v] is activated.", info.CardMask)
 
+	card.CardState = "CSTE0200"
+	err = c.repo.Save(ctx, card)
+	if err != nil {
+		return fmt.Errorf(">> serivce: activating card error >> %w", err)
+	}
+	return nil
 }
 
 func (c *cardSrv) callSoap(ctx context.Context, webservice string, msg entity.SoapEnvelope) (*entity.SoapReponse, error) {
@@ -166,4 +171,119 @@ func (c *cardSrv) callSoap(ctx context.Context, webservice string, msg entity.So
 	}
 
 	return resp, nil
+}
+
+// MakeTransaction implements CardService
+func (c *cardSrv) MakeTransaction(ctx context.Context, opr entity.MakeOperationRequest) error {
+	card := opr.Card
+	var req = entity.SoapEnvelope{
+		Soap:   "http://www.w3.org/2003/05/soap-envelope",
+		Ins:    "http://bpc.ru/sv/instantissueWS/",
+		Header: entity.SoapHeader{},
+		Body: entity.SoapBody{
+			Request: entity.GetCardInfoRequest{
+				ApplId:        card.ApplicationId,
+				IncludeLimits: "0",
+				Lang:          "LANGENG",
+			},
+		},
+	}
+
+	resp, err := c.callSoap(ctx, utils.INSTANT_ISSUE, req)
+	if err != nil {
+		return fmt.Errorf(">> serivce: getting card information error >> %w", err)
+	}
+
+	info := resp.Body.GetCardInfoResponse.CardInfo
+	log.Printf(">> change card state from [%s]", info.CardState)
+
+	if info.CardState == utils.CARD_ISSUED && opr.OperationType == utils.CARD_ISSUED {
+		req = entity.SoapEnvelope{
+			Soap:   "http://www.w3.org/2003/05/soap-envelope",
+			Ins:    "http://bpc.ru/sv/instantissueWS/",
+			Iss:    "http://bpc.ru/sv/SVXP/cardSecure",
+			Header: entity.SoapHeader{},
+			Body: entity.SoapBody{
+				Request: entity.ProcessIBGDataRequest{
+					CardID:              info.CardID,
+					CardNumber:          info.CardNumber,
+					CardSequentalNumber: info.SequentialNumber,
+					State:               utils.CARD_ACTIVATED,
+					CardSecurity: entity.CardSecurity{
+						PVV: utils.DEFAULT_PVV,
+					},
+				},
+			},
+		}
+
+		resp, err = c.callSoap(ctx, utils.INSTANT_ISSUE, req)
+		if err != nil {
+			return fmt.Errorf(">> serivce: changing card state error >> %w", err)
+		}
+
+		stateResult := resp.Body.ProcessIBGDataResponse.Text
+		log.Printf(">> changed card state to [CSTE0200] operation status [%s]", stateResult)
+	}
+
+	log.Printf(">> make operation [%s]", opr.OperationType)
+
+	newOpr := entity.Operation{
+		OperType: opr.OperationType,
+		MsgType:  "MSGTPRES",
+		SttlType: "STTT0000",
+		OperDate: time.Now().Format(time.RFC3339)[:19],
+		HostDate: time.Now().Format(time.RFC3339)[:19],
+		OperAmount: &entity.OperAmount{
+			AmountValue: opr.Amount,
+			Currency:    "704",
+		},
+		Issuer: &entity.Issuer{
+			ClientIDType:  "CITPCARD",
+			ClientIDValue: info.CardNumber,
+			CardNumber:    info.CardNumber,
+			CardID:        info.CardID,
+			AccountNumber: info.AccountInfo.AccountNumber,
+		},
+	}
+
+	if opr.OperationType == utils.CHANGE_CARD_STATUS {
+		newOpr.OperReason = "CSTS0000"
+	}
+
+	if opr.OperationType == utils.PAYMENT {
+		newOpr.Issuer.ClientIDType = "CITPACCT"
+		newOpr.Issuer.ClientIDValue = info.AccountInfo.AccountNumber
+	}
+
+	req = entity.SoapEnvelope{
+		Soap:   "http://www.w3.org/2003/05/soap-envelope",
+		Ins:    "http://bpc.ru/SVXP/clearing/ws",
+		Iss:    "http://bpc.ru/sv/SVXP/clearing",
+		Header: entity.SoapHeader{},
+		Body: entity.SoapBody{
+			Request: entity.OperationRequest{
+				Operation: newOpr,
+			},
+		},
+	}
+
+	_, err = c.callSoap(ctx, utils.CLEARING_WS, req)
+	if err != nil {
+		return fmt.Errorf(">> serivce: activating card error >> %w", err)
+	}
+
+	if opr.OperationType == utils.CHANGE_CARD_STATE {
+
+		log.Printf("Card number [%v] is activated.", info.CardMask)
+
+		card.CardState = "CSTE0200"
+
+		err = c.repo.Save(ctx, *card)
+
+		if err != nil {
+			return fmt.Errorf(">> serivce: activating card error >> %w", err)
+		}
+	}
+
+	return nil
 }

@@ -112,15 +112,20 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 		return fmt.Errorf("call webservice error: %s", resp.Body.Fault.Faultstring)
 	}
 
-	if resp.Body.Application.ApplicationStatus == "APST0008" {
-		return fmt.Errorf("service: processing application error >> %s", resp.Body.Application.ApplicationID)
+	t := resp.Body.Application
+	if t.ApplicationStatus == "APST0008" {
+		return fmt.Errorf("service: processing application error >> %s", t.ApplicationID)
 	}
 
-	cardId, _ := strconv.Atoi(resp.Body.Application.Customer.Contract.Card.CardID)
+	log.Printf("created card [%s][%s]", t.Customer.Contract.Card.CardID, t.Customer.Contract.Card.CardNumber)
+
+	cardId, _ := strconv.ParseInt(t.Customer.Contract.Card.CardID, 10, 64)
 	err = a.crd.Save(ctx, entity.CachedCard{
 		CardID:        cardId,
-		CardNumber:    resp.Body.Application.Customer.Contract.Card.CardNumber,
-		ApplicationId: resp.Body.Application.ApplicationID,
+		CardNumber:    t.Customer.Contract.Card.CardNumber,
+		ApplicationId: t.ApplicationID,
+		CardState:     "CSTE0100",
+		CardStatus:    t.Customer.Contract.Card.CardStatus,
 	})
 
 	if err != nil {

@@ -8,6 +8,7 @@ import (
 
 type CardRepositoryBolt interface {
 	FindAll(ctx context.Context) ([]entity.CachedCard, error)
+	FindById(ctx context.Context, cardId int64) (*entity.CachedCard, error)
 	CleanAll(ctx context.Context) error
 	Save(ctx context.Context, card entity.CachedCard) error
 }

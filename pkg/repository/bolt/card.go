@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -39,6 +40,9 @@ func (c *cardRepoBolt) FindAll(ctx context.Context) ([]entity.CachedCard, error)
 			if err != nil {
 				return err
 			}
+			if cc.CardState == "" {
+				cc.CardState = "CSTE0100"
+			}
 			m = append(m, cc)
 			return nil
 		})
@@ -49,8 +53,29 @@ func (c *cardRepoBolt) FindAll(ctx context.Context) ([]entity.CachedCard, error)
 	if err != nil {
 		return m, fmt.Errorf("get all settings error: %w", err)
 	}
-
+	sort.SliceStable(m, func(i, j int) bool {
+		return m[i].CardID > m[j].CardID
+	})
 	return m, nil
+}
+
+// FindById implements repository.CardRepositoryBolt
+func (c *cardRepoBolt) FindById(ctx context.Context, cardId int64) (*entity.CachedCard, error) {
+	card := &entity.CachedCard{}
+	err := c.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte(utils.CardTable))
+		v := b.Get(itob(cardId))
+		err := json.Unmarshal(v, &card)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return card, nil
 }
 
 // Save implements repository.CardRepositoryBolt
@@ -65,14 +90,15 @@ func (c *cardRepoBolt) Save(ctx context.Context, card entity.CachedCard) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("saving card [%d][%s]\n", card.CardID, card.CardNumber)
+		log.Printf("saving card [%d][%s][%s]\n", card.CardID, card.CardNumber, card.ApplicationId)
 		return bucket.Put(itob(card.CardID), []byte(jo))
 	})
 }
 
 // itob returns an 8-byte big endian representation of v.
-func itob(v int) []byte {
+func itob(v int64) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(v))
+	log.Printf("saving card id [%d][%d]\n", b, v)
 	return b
 }
