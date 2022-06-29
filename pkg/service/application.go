@@ -57,7 +57,7 @@ func (a *applicationService) Create(ctx context.Context, req *entity.CardRequest
 	log.Printf(" - Institution ID: [%s]\n - ProductID: [%s]\n - CardType: [%s]\n", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
 
 	// load template
-	templateName := fmt.Sprintf("templates/flow_{%s}.xml", req.Action)
+	templateName := fmt.Sprintf("templates/flow_%s.xml", req.Action)
 	appTemplate := template.Must(template.ParseFS(a.fs, templateName))
 
 	doc := &bytes.Buffer{}

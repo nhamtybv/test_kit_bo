@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sort"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
@@ -90,7 +89,7 @@ func (c *cardRepoBolt) Save(ctx context.Context, card entity.CachedCard) error {
 		if err != nil {
 			return err
 		}
-		log.Printf("saving card [%d][%s][%s]\n", card.CardID, card.CardNumber, card.ApplicationId)
+		// log.Printf("saving card [%d][%s][%s]\n", card.CardID, card.CardNumber, card.ApplicationId)
 		return bucket.Put(itob(card.CardID), []byte(jo))
 	})
 }
@@ -99,6 +98,5 @@ func (c *cardRepoBolt) Save(ctx context.Context, card entity.CachedCard) error {
 func itob(v int64) []byte {
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, uint64(v))
-	log.Printf("saving card id [%d][%d]\n", b, v)
 	return b
 }

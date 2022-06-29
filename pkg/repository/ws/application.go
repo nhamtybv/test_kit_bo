@@ -24,7 +24,7 @@ func NewApplicationRepository(config repository.ConfigRepository) repository.App
 
 // GetCardByApplicationId implements repository.ApplicationRepository
 func (a *applicationRepository) GetCardByApplicationId(ctx context.Context, applId string) (*entity.CardInfo, error) {
-	url := a.config.GetConfigValue(utils.WebserviceAddress, utils.CLEARING_WS)
+	url := a.config.GetConfigValue(utils.WebserviceAddress, utils.INSTANT_ISSUE)
 
 	var req = entity.SoapEnvelope{
 		Soap:   "http://www.w3.org/2003/05/soap-envelope",

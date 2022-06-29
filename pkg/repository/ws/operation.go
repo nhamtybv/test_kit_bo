@@ -27,6 +27,7 @@ func (o *operationRepository) Create(ctx context.Context, opr interface{}) (*ent
 	var req = entity.SoapEnvelope{
 		Soap:   "http://www.w3.org/2003/05/soap-envelope",
 		Ins:    "http://bpc.ru/sv/instantissueWS/",
+		Iss:    "http://bpc.ru/sv/SVXP/clearing",
 		Header: entity.SoapHeader{},
 		Body: entity.SoapBody{
 			Request: opr,

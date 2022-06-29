@@ -57,7 +57,7 @@ func (c *cardService) Activate(ctx context.Context, card entity.CachedCard) erro
 
 	info, err := c.app.GetCardByApplicationId(ctx, card.ApplicationId)
 	if err != nil {
-		return fmt.Errorf(">> serivce: getting card information error >> %w", err)
+		return fmt.Errorf(">> serivce: getting card information \n>> %w", err)
 	}
 
 	log.Printf(">> change card state from [%s]", info.CardState)

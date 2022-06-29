@@ -28,10 +28,12 @@ func NewWSHandler() WSHandler {
 
 // Call implements WSHandler
 func (w *wsHandler) Call(ctx context.Context, service_url string, req *bytes.Buffer) (*entity.SoapReponse, error) {
-	log.Printf("calling web service at %s", service_url)
-	log.Println("================================================================")
-	log.Printf("\n%s\n", req.String())
-	log.Println("================================================================")
+	logText := ">> calling web service at %s\n"
+	logText += "================================================================"
+	logText += "\n%s\n"
+	logText += "================================================================"
+
+	log.Printf(logText, service_url, req.String())
 
 	resp, err := http.NewRequest(http.MethodPost, service_url, req)
 	if err != nil {
@@ -70,8 +72,9 @@ func (w *wsHandler) Call(ctx context.Context, service_url string, req *bytes.Buf
 		return nil, fmt.Errorf("parsing xml error: %w", err)
 	}
 
-	if (soapResp.Body.Fault != nil && soapResp.Body.Fault != &entity.Fault{}) {
-		return nil, fmt.Errorf("service: parsing response error >> %s", soapResp.Body.Fault)
+	f := soapResp.Body.Fault
+	if f != nil {
+		return nil, fmt.Errorf("service: parsing response error >> %+v", f)
 	}
 
 	return soapResp, nil

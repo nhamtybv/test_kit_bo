@@ -13,7 +13,7 @@ type SoapReponseBody struct {
 	GetCardInfoResponse           *GetCardInfoResponse           `xml:"getCardInfoResponse"`
 	ProcessIBGDataResponse        *ProcessIBGDataResponse        `xml:"processIBGDataResponse"`
 	GetApplicationDetailsResponse *GetApplicationDetailsResponse `xml:"getApplicationDetailsResponse"`
-	Fault                         *Fault                         `xml:"Fault"`
+	Fault                         *Fault                         `xml:"Fault,omitempty"`
 }
 
 // FaultDetail type
@@ -23,7 +23,7 @@ type FaultDetail struct {
 
 // Fault type
 type Fault struct {
-	XMLName     xml.Name    `xml:"Fault"`
+	XMLName     xml.Name    `xml:"Fault,omitempty"`
 	Faultcode   string      `xml:"faultcode" json:"faultcode"`
 	Faultstring string      `xml:"faultstring" json:"faultstring"`
 	Detail      FaultDetail `xml:"detail" json:"detail"`
