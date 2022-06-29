@@ -7,15 +7,13 @@ import (
 	"io/fs"
 	"log"
 	"strconv"
-	"strings"
 	"text/template"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
-	"github.com/nhamtybv/test_kit_bo/pkg/integration"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository/bolt"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository/mock"
-	"github.com/nhamtybv/test_kit_bo/pkg/utils"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository/ws"
 	"github.com/nhamtybv/test_kit_bo/static"
 	"go.etcd.io/bbolt"
 )
@@ -24,67 +22,43 @@ type ApplicationService interface {
 	Create(ctx context.Context, prd *entity.CardRequest) error
 }
 
-type appSrv struct {
-	app repository.ApplicationConfigRepository
-	cfg repository.ApplicationConfigRepository
-	crd repository.CardRepositoryBolt
-
-	ws integration.WSHandler
-	fs fs.FS
+type applicationService struct {
+	mock   repository.ApplicationRepository
+	ws     repository.ApplicationRepository
+	config repository.ConfigRepository
+	card   repository.CardRepositoryBolt
+	fs     fs.FS
 }
 
 func NewApplicationService(db *bbolt.DB) ApplicationService {
-	r := mock.NewApplicationtRepo()
-	rb := bolt.NewApplicationRepoBolt(db)
-	c := bolt.NewCardRepoBolt(db)
-	ws := integration.NewWSHandler()
+	m := mock.NewApplicationMockRepository()
+	c := bolt.NewConfigBoltRepository(db)
+	w := ws.NewApplicationRepository(c)
+	d := bolt.NewCardRepoBolt(db)
 
-	return &appSrv{
-		app: r,
-		cfg: rb,
-		crd: c,
-		ws:  ws,
-		fs:  static.FS,
+	return &applicationService{
+		mock:   m,
+		ws:     w,
+		config: c,
+		card:   d,
+		fs:     static.FS,
 	}
 }
 
 // Save implements ApplicationService
-func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
-	app := a.app.Create(ctx)
+func (a *applicationService) Create(ctx context.Context, req *entity.CardRequest) error {
+	// TODO: load data from sv and generate to sub card request
+	// if req.Action == utils.ADD_SUB_CAR {
+	// 	addition_infor, err := callSoapService(ctx, )
+	// }
 
-	prd := req.Product
-	app.InstitutionID = strconv.Itoa(prd.InstID)
-	app.Customer.Contract.ContractType = prd.ContractType
-	app.Customer.Contract.ProductID = strconv.Itoa(prd.ID)
-	app.Customer.Contract.Card.CardType = strconv.Itoa(prd.CardsTypes[len(prd.CardsTypes)-1].CardTypeID)
-	app.AgentID = strconv.Itoa(req.AgentId)
-	app.Customer.Contract.Card.Category = req.Category
-	app.Customer.Contract.Account.AccountType = prd.AccountTypes[0].AccountType
+	app := a.mock.Mock(ctx, req)
 
 	log.Printf(" - Institution ID: [%s]\n - ProductID: [%s]\n - CardType: [%s]\n", app.InstitutionID, app.Customer.Contract.ProductID, app.Customer.Contract.Card.CardType)
 
-	for _, v := range prd.Services {
-		// log.Printf("%v", v)
-		refId := "account_1"
-		if v.EntityType == "ENTTCARD" {
-			refId = "card_1"
-		}
-		if v.EntityType == "ENTTCUST" {
-			refId = "customer_1"
-		}
-
-		c := entity.Service{
-			Value: strconv.Itoa(v.ServiceID),
-			ServiceObject: entity.ServiceObject{
-				RefID:     refId,
-				StartDate: app.Customer.Contract.StartDate,
-			},
-		}
-		app.Customer.Contract.Services = append(app.Customer.Contract.Services, c)
-	}
-
 	// load template
-	appTemplate := template.Must(template.ParseFS(a.fs, "templates/flow_1001.xml"))
+	templateName := fmt.Sprintf("templates/flow_{%s}.xml", req.Action)
+	appTemplate := template.Must(template.ParseFS(a.fs, templateName))
 
 	doc := &bytes.Buffer{}
 	err := appTemplate.Execute(doc, app)
@@ -93,45 +67,31 @@ func (a *appSrv) Create(ctx context.Context, req *entity.CardRequest) error {
 		return err
 	}
 
-	log.Printf("Message: \n%s\n", doc.String())
-
-	strAddr, err := a.cfg.GetAddress(ctx)
+	resp, err := a.ws.Create(ctx, doc)
 	if err != nil {
-		log.Println("WARNING: webservice url wasnot setted up")
+		return fmt.Errorf("call webservice >>  %w", err)
 	}
 
-	strAddr = strings.TrimSuffix(strAddr, "/") + "/" + utils.APPLICATION_SERVICE
-
-	log.Printf("calling webservice at %s", strAddr)
-	resp, err := a.ws.Call(ctx, strAddr, doc)
-	if err != nil {
-		return fmt.Errorf("call webservice error: %w", err)
+	if resp.ApplicationStatus == "APST0008" {
+		return fmt.Errorf("service: processing application >> %s", resp.ApplicationID)
 	}
 
-	if resp.Body.Fault != nil {
-		return fmt.Errorf("call webservice error: %s", resp.Body.Fault.Faultstring)
-	}
+	log.Printf("created card [%s][%s]", resp.Customer.Contract.Card.CardID, resp.Customer.Contract.Card.CardNumber)
 
-	t := resp.Body.Application
-	if t.ApplicationStatus == "APST0008" {
-		return fmt.Errorf("service: processing application error >> %s", t.ApplicationID)
-	}
-
-	log.Printf("created card [%s][%s]", t.Customer.Contract.Card.CardID, t.Customer.Contract.Card.CardNumber)
-
-	cardId, _ := strconv.ParseInt(t.Customer.Contract.Card.CardID, 10, 64)
-	err = a.crd.Save(ctx, entity.CachedCard{
+	cardId, _ := strconv.ParseInt(resp.Customer.Contract.Card.CardID, 10, 64)
+	err = a.card.Save(ctx, entity.CachedCard{
 		CardID:        cardId,
-		CardNumber:    t.Customer.Contract.Card.CardNumber,
-		ApplicationId: t.ApplicationID,
+		CardNumber:    resp.Customer.Contract.Card.CardNumber,
+		ApplicationId: resp.ApplicationID,
 		CardState:     "CSTE0100",
-		CardStatus:    t.Customer.Contract.Card.CardStatus,
+		CardStatus:    resp.Customer.Contract.Card.CardStatus,
 	})
 
 	if err != nil {
 		log.Print("cannot add new card to database.")
 	}
 
-	log.Printf("application id %s is processed.", resp.Body.Application.ApplicationID)
+	log.Printf("application id %s is processed.", resp.ApplicationID)
+
 	return nil
 }

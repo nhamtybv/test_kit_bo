@@ -28,8 +28,9 @@ type productSrv struct {
 func NewProductService(db *bbolt.DB) ProductService {
 
 	prdBolt := bolt.NewProductRepo(db)
-	configRepo := bolt.NewConfigRepoBolt(db)
+	configRepo := bolt.NewConfigBoltRepository(db)
 	connStr, err := prdBolt.GetConnection(context.Background())
+
 	if err != nil {
 		log.Println("WARNING: Oracle connection wasnot setted up")
 	}

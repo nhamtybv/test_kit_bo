@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"time"
@@ -27,6 +28,11 @@ func NewWSHandler() WSHandler {
 
 // Call implements WSHandler
 func (w *wsHandler) Call(ctx context.Context, service_url string, req *bytes.Buffer) (*entity.SoapReponse, error) {
+	log.Printf("calling web service at %s", service_url)
+	log.Println("================================================================")
+	log.Printf("\n%s\n", req.String())
+	log.Println("================================================================")
+
 	resp, err := http.NewRequest(http.MethodPost, service_url, req)
 	if err != nil {
 		return nil, fmt.Errorf("preparing request error: %w", err)
@@ -62,6 +68,10 @@ func (w *wsHandler) Call(ctx context.Context, service_url string, req *bytes.Buf
 	err = xml.Unmarshal(httpBody, soapResp)
 	if err != nil {
 		return nil, fmt.Errorf("parsing xml error: %w", err)
+	}
+
+	if (soapResp.Body.Fault != nil && soapResp.Body.Fault != &entity.Fault{}) {
+		return nil, fmt.Errorf("service: parsing response error >> %s", soapResp.Body.Fault)
 	}
 
 	return soapResp, nil

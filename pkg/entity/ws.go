@@ -9,10 +9,11 @@ type SoapReponse struct {
 }
 
 type SoapReponseBody struct {
-	Application            *Application            `xml:"application"`
-	GetCardInfoResponse    *GetCardInfoResponse    `xml:"getCardInfoResponse"`
-	ProcessIBGDataResponse *ProcessIBGDataResponse `xml:"processIBGDataResponse"`
-	Fault                  *Fault                  `xml:"Fault"`
+	Application                   *Application                   `xml:"application"`
+	GetCardInfoResponse           *GetCardInfoResponse           `xml:"getCardInfoResponse"`
+	ProcessIBGDataResponse        *ProcessIBGDataResponse        `xml:"processIBGDataResponse"`
+	GetApplicationDetailsResponse *GetApplicationDetailsResponse `xml:"getApplicationDetailsResponse"`
+	Fault                         *Fault                         `xml:"Fault"`
 }
 
 // FaultDetail type

@@ -6,6 +6,7 @@ type CardRequest struct {
 	Product  Product `json:"product"`
 	AgentId  int     `json:"agent_id"`
 	Category string  `json:"category"`
+	Action   string  `json:"action"`
 }
 
 type CachedCard struct {

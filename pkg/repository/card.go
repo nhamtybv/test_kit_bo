@@ -12,3 +12,7 @@ type CardRepositoryBolt interface {
 	CleanAll(ctx context.Context) error
 	Save(ctx context.Context, card entity.CachedCard) error
 }
+
+type CardRepository interface {
+	UpdateState(ctx context.Context, info *entity.CardInfo) error
+}

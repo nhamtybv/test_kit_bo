@@ -19,14 +19,17 @@ type CardController interface {
 
 type cardCtl struct {
 	cs  service.CardService
+	op  service.OperationService
 	ctx context.Context
 }
 
 func NewCardController(ctx context.Context, db *bbolt.DB) CardController {
 	cs := service.NewCardService(db)
+	op := service.NewOperationService()
 
 	return &cardCtl{
 		cs:  cs,
+		op:  op,
 		ctx: ctx,
 	}
 }
@@ -77,7 +80,7 @@ func (c *cardCtl) MakeOperation(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	err := c.cs.MakeTransaction(c.ctx, opr)
+	err := c.op.Create(c.ctx, opr)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {

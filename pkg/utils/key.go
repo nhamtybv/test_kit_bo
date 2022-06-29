@@ -63,4 +63,6 @@ const (
 	CARD_ISSUED        string = "CSTE0100"
 	CARD_ACTIVATED     string = "CSTE0200"
 	DEFAULT_PVV        string = "000"
+	CARD_CATEGORY_MAIN string = "CRCG0800"
+	CARD_CATEGORY_SUB  string = "CRCG0400"
 )

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -11,20 +13,20 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-type configBolt struct {
+type configBoltRepository struct {
 	db *bbolt.DB
 }
 
-func NewConfigRepoBolt(db *bbolt.DB) repository.ConfigRepository {
+func NewConfigBoltRepository(db *bbolt.DB) repository.ConfigRepository {
 	_ = db.Update(func(tx *bbolt.Tx) error {
 		tx.CreateBucketIfNotExists([]byte(utils.SettingTable))
 
 		return nil
 	})
-	return &configBolt{db: db}
+	return &configBoltRepository{db: db}
 }
 
-func (w *configBolt) Save(ctx context.Context, c *entity.Config) error {
+func (w *configBoltRepository) Save(ctx context.Context, c *entity.Config) error {
 	if w.db == nil {
 		return fmt.Errorf("config database is not initialed properly")
 	}
@@ -45,11 +47,22 @@ func (w *configBolt) Save(ctx context.Context, c *entity.Config) error {
 	return err
 }
 
-func (w *configBolt) FindByName(ctx context.Context, name string) (*entity.Config, error) {
+func (w *configBoltRepository) FindByName(ctx context.Context, name string) (*entity.Config, error) {
 	return findConfigByName(w.db, name)
 }
 
-func (w *configBolt) FindAll(ctx context.Context) (*entity.ConfigList, error) {
+func (w *configBoltRepository) GetConfigValue(name, service string) string {
+	val, err := findConfigByName(w.db, name)
+	if err != nil {
+		log.Printf("> repo get config err %s", err.Error())
+		return ""
+	}
+
+	addr := strings.TrimSuffix(val.Value, "/") + "/" + service
+	return addr
+}
+
+func (w *configBoltRepository) FindAll(ctx context.Context) (*entity.ConfigList, error) {
 	m := make(map[string]string)
 
 	err := w.db.View(func(tx *bbolt.Tx) error {

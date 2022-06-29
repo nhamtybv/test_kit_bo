@@ -21,7 +21,7 @@ type configSrv struct {
 }
 
 func NewConfigService(db *bbolt.DB) ConfigService {
-	r := bolt.NewConfigRepoBolt(db)
+	r := bolt.NewConfigBoltRepository(db)
 
 	return &configSrv{
 		repo: r,
