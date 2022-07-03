@@ -49,7 +49,7 @@ func NewApplicationService(db *bbolt.DB) ApplicationService {
 func (a *applicationService) Create(ctx context.Context, req *entity.CardRequest) error {
 	// TODO: load data from sv and generate to sub card request
 	// if req.Action == utils.ADD_SUB_CAR {
-	// 	addition_infor, err := callSoapService(ctx, )
+	// 	addition_infor, err := callSoapService(ctx)
 	// }
 
 	app := a.mock.Mock(ctx, req)

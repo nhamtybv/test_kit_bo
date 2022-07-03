@@ -24,7 +24,7 @@ func NewCardRepository(config repository.ConfigRepository) repository.CardReposi
 
 // UpdateState implements repository.CardRepository
 func (c *cardRepository) UpdateState(ctx context.Context, info *entity.CardInfo) error {
-	url := c.config.GetConfigValue(utils.WebserviceAddress, utils.INSTANT_ISSUE)
+	url := c.config.GetConfigValue(utils.WebserviceAddress, "", utils.INSTANT_ISSUE)
 
 	var req = entity.SoapEnvelope{
 		Soap:   "http://www.w3.org/2003/05/soap-envelope",

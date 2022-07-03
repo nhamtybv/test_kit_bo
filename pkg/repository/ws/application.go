@@ -24,7 +24,7 @@ func NewApplicationRepository(config repository.ConfigRepository) repository.App
 
 // GetCardByApplicationId implements repository.ApplicationRepository
 func (a *applicationRepository) GetCardByApplicationId(ctx context.Context, applId string) (*entity.CardInfo, error) {
-	url := a.config.GetConfigValue(utils.WebserviceAddress, utils.INSTANT_ISSUE)
+	url := a.config.GetConfigValue(utils.WebserviceAddress, "", utils.INSTANT_ISSUE)
 
 	var req = entity.SoapEnvelope{
 		Soap:   "http://www.w3.org/2003/05/soap-envelope",
@@ -59,7 +59,7 @@ func (*applicationRepository) Mock(ctx context.Context, req *entity.CardRequest)
 
 // Create implements repository.ApplicationRepository
 func (a *applicationRepository) Create(ctx context.Context, req *bytes.Buffer) (*entity.Application, error) {
-	url := a.config.GetConfigValue(utils.WebserviceAddress, utils.APPLICATION_SERVICE)
+	url := a.config.GetConfigValue(utils.WebserviceAddress, "", utils.APPLICATION_SERVICE)
 
 	resp, err := a.ws.Call(ctx, url, req)
 	if err != nil {

@@ -22,7 +22,7 @@ func NewOperationRepository(config repository.ConfigRepository) repository.Opera
 
 // MakeOperation implements repository.OperationRepository
 func (o *operationRepository) Create(ctx context.Context, opr interface{}) (*entity.SoapReponse, error) {
-	url := o.config.GetConfigValue(utils.WebserviceAddress, utils.CLEARING_WS)
+	url := o.config.GetConfigValue(utils.WebserviceAddress, "", utils.CLEARING_WS)
 
 	var req = entity.SoapEnvelope{
 		Soap:   "http://www.w3.org/2003/05/soap-envelope",
@@ -36,12 +36,12 @@ func (o *operationRepository) Create(ctx context.Context, opr interface{}) (*ent
 
 	buf, err := Otob(req)
 	if err != nil {
-		return nil, fmt.Errorf(">> repo: parsing request error >> %w", err)
+		return nil, fmt.Errorf(">> repo: parsing request %w", err)
 	}
 
 	resp, err := o.ws.Call(ctx, url, buf)
 	if err != nil {
-		return nil, fmt.Errorf("repo: calling webservice error >> %w", err)
+		return nil, fmt.Errorf(">> repo: calling webservice %w", err)
 	}
 
 	return resp, nil

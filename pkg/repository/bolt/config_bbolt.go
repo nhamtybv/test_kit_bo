@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/nhamtybv/test_kit_bo/pkg/entity"
 	"github.com/nhamtybv/test_kit_bo/pkg/repository"
@@ -51,15 +50,14 @@ func (w *configBoltRepository) FindByName(ctx context.Context, name string) (*en
 	return findConfigByName(w.db, name)
 }
 
-func (w *configBoltRepository) GetConfigValue(name, service string) string {
+func (w *configBoltRepository) GetConfigValue(name, prefix, suffix string) string {
 	val, err := findConfigByName(w.db, name)
 	if err != nil {
 		log.Printf("> repo get config err %s", err.Error())
 		return ""
 	}
 
-	addr := strings.TrimSuffix(val.Value, "/") + "/" + service
-	return addr
+	return fmt.Sprintf("%s%s%s", prefix, val.Value, suffix)
 }
 
 func (w *configBoltRepository) FindAll(ctx context.Context) (*entity.ConfigList, error) {

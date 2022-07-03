@@ -2,90 +2,74 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/nhamtybv/test_kit_bo/pkg/entity"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository/bolt"
+	"github.com/nhamtybv/test_kit_bo/pkg/repository/ws"
+	"github.com/nhamtybv/test_kit_bo/pkg/utils"
+	"go.etcd.io/bbolt"
 )
 
 type OperationService interface {
-	Create(ctx context.Context, opr interface{}) error
+	Create(ctx context.Context, opr entity.MakeOperationRequest) error
 }
 
 type operationService struct {
+	oper_ws repository.OperationRepository
+	app     repository.ApplicationRepository
+}
+
+func NewOperationService(db *bbolt.DB) OperationService {
+	c := bolt.NewConfigBoltRepository(db)
+	op := ws.NewOperationRepository(c)
+	a := ws.NewApplicationRepository(c)
+	return &operationService{oper_ws: op, app: a}
 }
 
 // Create implements OperationService
-func (operationService) Create(ctx context.Context, opr interface{}) error {
-	panic("unimplemented")
-}
+func (o *operationService) Create(ctx context.Context, opr entity.MakeOperationRequest) error {
 
-func NewOperationService() OperationService {
-	return operationService{}
-}
-
-/*
-// MakeTransaction implements CardService
-func (c *cardService) MakeTransaction(ctx context.Context, opr entity.MakeOperationRequest) error {
 	card := opr.Card
-
-	log.Printf(">> make operation [%s]", opr.OperationType)
-
-	newOpr := entity.Operation{
-		OperType: opr.OperationType,
-		MsgType:  "MSGTPRES",
-		SttlType: "STTT0000",
-		OperDate: time.Now().Format(time.RFC3339)[:19],
-		HostDate: time.Now().Format(time.RFC3339)[:19],
-		OperAmount: &entity.OperAmount{
-			AmountValue: opr.Amount,
-			Currency:    "704",
-		},
-		Issuer: &entity.Issuer{
-			ClientIDType:  "CITPCARD",
-			ClientIDValue: info.CardNumber,
-			CardNumber:    info.CardNumber,
-			CardID:        info.CardID,
-			AccountNumber: info.AccountInfo.AccountNumber,
-		},
+	info, err := o.app.GetCardByApplicationId(ctx, card.ApplicationId)
+	if err != nil {
+		return fmt.Errorf(">> serivce: getting card information %w", err)
 	}
 
-	if opr.OperationType == utils.CHANGE_CARD_STATUS {
-		newOpr.OperReason = "CSTS0000"
-	}
-
-	if opr.OperationType == utils.PAYMENT {
-		newOpr.Issuer.ClientIDType = "CITPACCT"
-		newOpr.Issuer.ClientIDValue = info.AccountInfo.AccountNumber
-	}
-
-	req = entity.SoapEnvelope{
-		Soap:   "http://www.w3.org/2003/05/soap-envelope",
-		Ins:    "http://bpc.ru/SVXP/clearing/ws",
-		Iss:    "http://bpc.ru/sv/SVXP/clearing",
-		Header: entity.SoapHeader{},
-		Body: entity.SoapBody{
-			Request: entity.OperationRequest{
-				Operation: newOpr,
+	req := entity.OperationRequest{
+		Operation: entity.Operation{
+			OperType: opr.OperationType,
+			MsgType:  "MSGTAUTH",
+			SttlType: "STTT0010",
+			OperDate: time.Now().Format(time.RFC3339)[:19],
+			HostDate: time.Now().Format(time.RFC3339)[:19],
+			OperAmount: &entity.OperAmount{
+				AmountValue: opr.Amount,
+				Currency:    "704",
+			},
+			Issuer: &entity.Issuer{
+				ClientIDType:  "CITPACCT",
+				ClientIDValue: info.AccountInfo.AccountNumber,
+				CardNumber:    info.CardNumber,
+				CardID:        info.CardID,
+				AccountNumber: info.AccountInfo.AccountNumber,
 			},
 		},
 	}
 
-	_, err = c.callSoap(ctx, utils.CLEARING_WS, req)
+	if opr.OperationType == utils.PURCHASE {
+		req.Operation.Issuer.ClientIDType = "CITPCARD"
+		req.Operation.Issuer.ClientIDValue = info.CardNumber
+	}
+
+	oResp, err := o.oper_ws.Create(ctx, req)
 	if err != nil {
-		return fmt.Errorf(">> serivce: activating card error >> %w", err)
+		return fmt.Errorf(">> serivce: creating operation %w", err)
 	}
-
-	if opr.OperationType == utils.CHANGE_CARD_STATE {
-
-		log.Printf("Card number [%v] is activated.", info.CardMask)
-
-		card.CardState = "CSTE0200"
-
-		err = c.repo.Save(ctx, *card)
-
-		if err != nil {
-			return fmt.Errorf(">> serivce: activating card error >> %w", err)
-		}
-	}
-
+	op := oResp.Body.OperationResponse.Operation
+	log.Printf("operation id [%s] is processed with status [%s]", op.OperID, op.Status)
 	return nil
 }
-
-*/

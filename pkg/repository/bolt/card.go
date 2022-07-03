@@ -2,7 +2,6 @@ package bolt
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -62,8 +61,10 @@ func (c *cardRepoBolt) FindAll(ctx context.Context) ([]entity.CachedCard, error)
 func (c *cardRepoBolt) FindById(ctx context.Context, cardId int64) (*entity.CachedCard, error) {
 	card := &entity.CachedCard{}
 	err := c.db.View(func(tx *bbolt.Tx) error {
+
 		b := tx.Bucket([]byte(utils.CardTable))
-		v := b.Get(itob(cardId))
+		v := b.Get(utils.Itob(cardId))
+
 		err := json.Unmarshal(v, &card)
 		if err != nil {
 			return err
@@ -89,14 +90,7 @@ func (c *cardRepoBolt) Save(ctx context.Context, card entity.CachedCard) error {
 		if err != nil {
 			return err
 		}
-		// log.Printf("saving card [%d][%s][%s]\n", card.CardID, card.CardNumber, card.ApplicationId)
-		return bucket.Put(itob(card.CardID), []byte(jo))
-	})
-}
 
-// itob returns an 8-byte big endian representation of v.
-func itob(v int64) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(v))
-	return b
+		return bucket.Put(utils.Itob(card.CardID), []byte(jo))
+	})
 }

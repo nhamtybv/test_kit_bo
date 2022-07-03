@@ -7,6 +7,7 @@ const (
 	SettingTable        string   = "SETTINGS"
 	ProductTable        string   = "PRODUCTS"
 	AgentTable          string   = "AGENTS"
+	TestCaseTable       string   = "TESTCASES_DATA"
 	CardTable           string   = "CARDS_DATA"
 	MainBucket          string   = "CONFIG_BUCKET"
 	DatabaseName        string   = "config.db"

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"mime"
 	"net/http"
@@ -52,6 +53,9 @@ func (a *appServer) Run(addr string) {
 	mime.AddExtensionType(".css", "text/css")
 
 	// start server listen
-	log.Printf("Server started at %s", addr)
+	fmt.Printf("\t Server started at %s\n", addr)
+	fmt.Println("\t Please change below information:")
+	fmt.Println("\t  - webservice url")
+	fmt.Println("\t  - oracle connection string")
 	log.Fatal(ctx, srv.ListenAndServe())
 }

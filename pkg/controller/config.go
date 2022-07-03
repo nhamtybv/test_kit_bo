@@ -19,7 +19,7 @@ type ConfigController interface {
 	FindByName(w http.ResponseWriter, r *http.Request)
 }
 
-type configCtl struct {
+type configController struct {
 	cs  service.ConfigService
 	ctx context.Context
 }
@@ -27,14 +27,14 @@ type configCtl struct {
 func NewConfigController(ctx context.Context, db *bbolt.DB) ConfigController {
 	cs := service.NewConfigService(db)
 
-	return &configCtl{
+	return &configController{
 		cs:  cs,
 		ctx: ctx,
 	}
 }
 
 // FindAll implements ConfigController
-func (c *configCtl) FindAll(w http.ResponseWriter, r *http.Request) {
+func (c *configController) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := c.cs.FindAll(c.ctx)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err)
@@ -44,7 +44,7 @@ func (c *configCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // FindByName implements ConfigController
-func (c *configCtl) FindByName(w http.ResponseWriter, r *http.Request) {
+func (c *configController) FindByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 	log.Printf("CONTROLLER: find config by: %s", name)
@@ -62,7 +62,7 @@ func (c *configCtl) FindByName(w http.ResponseWriter, r *http.Request) {
 }
 
 // Save implements ConfigController
-func (c *configCtl) Save(w http.ResponseWriter, r *http.Request) {
+func (c *configController) Save(w http.ResponseWriter, r *http.Request) {
 	cfg := new(entity.Config)
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&cfg); err != nil {

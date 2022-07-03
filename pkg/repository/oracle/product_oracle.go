@@ -108,18 +108,18 @@ var (
 	`
 )
 
-type productRepo struct {
-	strConn string
+type productRepository struct {
+	config repository.ConfigRepository
 }
 
-func NewProductRepoOrcl(strConn string) repository.ProductRepository {
-	// return &productRepo{strConn: "oracle://" + strConn}
-	return &productRepo{strConn: "oracle://"}
+func NewProductRepository(config repository.ConfigRepository) repository.ProductRepository {
+	return &productRepository{config: config}
 }
 
 // FindAll implements repository.ProductRepository
-func (p *productRepo) FindAll(ctx context.Context) (*entity.ProductList, error) {
-	tdb, err := database.NewOracleConnection(p.strConn)
+func (p *productRepository) FindAll(ctx context.Context) (*entity.ProductList, error) {
+	strConn := p.config.GetConfigValue("oracle_connection", "oracle://", "")
+	tdb, err := database.NewOracleConnection(strConn)
 	if err != nil {
 		return nil, fmt.Errorf("prepare oracle connection error: %w", err)
 	}
@@ -163,40 +163,24 @@ func (p *productRepo) FindAll(ctx context.Context) (*entity.ProductList, error) 
 }
 
 // FindByNumber implements repository.ProductRepository
-func (p *productRepo) FindByNumber(ctx context.Context, product_number string) (*entity.Product, error) {
+func (p *productRepository) FindByNumber(ctx context.Context, product_number string) (*entity.Product, error) {
 	return nil, fmt.Errorf("unimplemented")
 }
 
 // Save implements repository.ProductRepository
-func (p *productRepo) Save(ctx context.Context, c *entity.ProductList) error {
+func (p *productRepository) Save(ctx context.Context, c *entity.ProductList) error {
 	return fmt.Errorf("unimplemented")
 }
 
-// GetConnection implements repository.ProductRepository
-func (p *productRepo) GetConnection(ctx context.Context) (string, error) {
-	return p.strConn, nil
-}
-
-// SetConnection implements repository.ProductRepository
-func (p *productRepo) SetConnection(str string) {
-	p.strConn = str
-}
-
 // FindAgent implements repository.ProductRepository
-func (p *productRepo) FindAgent(ctx context.Context) (*entity.Agent, error) {
-
-	tdb, err := database.NewOracleConnection(p.strConn)
+func (p *productRepository) FindAgent(ctx context.Context) (*entity.Agent, error) {
+	strConn := p.config.GetConfigValue("oracle_connection", "oracle://", "")
+	tdb, err := database.NewOracleConnection(strConn)
 	if err != nil {
 		return nil, fmt.Errorf("prepare oracle connection error: %w", err)
 	}
 	defer tdb.Close()
-	/*
-		stmt, err := tdb.Prepare(agentQuery)
-		if err != nil {
-			return nil, fmt.Errorf("prepare query error: %w", err)
-		}
-		defer stmt.Close()
-	*/
+
 	rows, err := tdb.Query(agentQuery)
 	if err != nil {
 		return nil, fmt.Errorf("query error: %w", err)
@@ -221,6 +205,6 @@ func (p *productRepo) FindAgent(ctx context.Context) (*entity.Agent, error) {
 }
 
 // SaveAgent implements repository.ProductRepository
-func (p *productRepo) SaveAgent(ctx context.Context, c *entity.Agent) error {
+func (p *productRepository) SaveAgent(ctx context.Context, c *entity.Agent) error {
 	panic("unimplemented")
 }

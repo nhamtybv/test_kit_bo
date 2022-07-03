@@ -29,13 +29,8 @@ func NewProductService(db *bbolt.DB) ProductService {
 
 	prdBolt := bolt.NewProductRepo(db)
 	configRepo := bolt.NewConfigBoltRepository(db)
-	connStr, err := prdBolt.GetConnection(context.Background())
 
-	if err != nil {
-		log.Println("WARNING: Oracle connection wasnot setted up")
-	}
-	// log.Printf("Oracle connection: %s", connStr)
-	prdOra := oracle.NewProductRepoOrcl(connStr)
+	prdOra := oracle.NewProductRepository(configRepo)
 
 	return &productSrv{
 		oraRepo:  prdOra,
@@ -61,11 +56,6 @@ func (p *productSrv) FindByNumber(ctx context.Context, product_number string) (*
 // Syns implements ProductService
 func (p *productSrv) Syns(ctx context.Context) error {
 	log.Println("SERVICE => DEBUG: call syns products")
-	strConn, _ := p.oraRepo.GetConnection(ctx)
-	if strConn == "oracle://" {
-		strConn, _ = p.boltRepo.GetConnection(ctx)
-		p.oraRepo.SetConnection("oracle://" + strConn)
-	}
 
 	data, err := p.oraRepo.FindAll(ctx)
 	if err != nil {
@@ -95,7 +85,7 @@ func (p *productSrv) Syns(ctx context.Context) error {
 
 	agent, err := p.oraRepo.FindAgent(ctx)
 	if err != nil {
-		return fmt.Errorf("getting product from database, error: %w", err)
+		return fmt.Errorf(">> getting product from database %w", err)
 	}
 
 	err = p.boltRepo.SaveAgent(ctx, agent)

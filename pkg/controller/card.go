@@ -14,10 +14,9 @@ import (
 type CardController interface {
 	FindAll(w http.ResponseWriter, r *http.Request)
 	Activate(w http.ResponseWriter, r *http.Request)
-	MakeOperation(w http.ResponseWriter, r *http.Request)
 }
 
-type cardCtl struct {
+type cardController struct {
 	cs  service.CardService
 	op  service.OperationService
 	ctx context.Context
@@ -25,9 +24,9 @@ type cardCtl struct {
 
 func NewCardController(ctx context.Context, db *bbolt.DB) CardController {
 	cs := service.NewCardService(db)
-	op := service.NewOperationService()
+	op := service.NewOperationService(db)
 
-	return &cardCtl{
+	return &cardController{
 		cs:  cs,
 		op:  op,
 		ctx: ctx,
@@ -35,7 +34,7 @@ func NewCardController(ctx context.Context, db *bbolt.DB) CardController {
 }
 
 // FindAll implements CardController
-func (c *cardCtl) FindAll(w http.ResponseWriter, r *http.Request) {
+func (c *cardController) FindAll(w http.ResponseWriter, r *http.Request) {
 	data, err := c.cs.FindAll(c.ctx)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, err)
@@ -45,7 +44,7 @@ func (c *cardCtl) FindAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetCardByApplicationId implements CardController
-func (c *cardCtl) Activate(w http.ResponseWriter, r *http.Request) {
+func (c *cardController) Activate(w http.ResponseWriter, r *http.Request) {
 
 	var crd = entity.CachedCard{}
 
@@ -61,29 +60,5 @@ func (c *cardCtl) Activate(w http.ResponseWriter, r *http.Request) {
 		utils.RespondWithError(w, http.StatusInternalServerError, err)
 	} else {
 		utils.RespondWithJSON(w, http.StatusCreated, "card_activated")
-	}
-}
-
-// MakeOperation implements CardController
-func (c *cardCtl) MakeOperation(w http.ResponseWriter, r *http.Request) {
-
-	var opr = entity.MakeOperationRequest{
-		OperationType: utils.CHANGE_CARD_STATUS,
-		Card:          &entity.CachedCard{},
-		Amount:        "0",
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&opr); err != nil {
-		utils.RespondWithError(w, http.StatusBadRequest, err)
-		return
-	}
-	defer r.Body.Close()
-
-	err := c.op.Create(c.ctx, opr)
-	if err != nil {
-		utils.RespondWithError(w, http.StatusInternalServerError, err)
-	} else {
-		utils.RespondWithJSON(w, http.StatusCreated, "done")
 	}
 }
